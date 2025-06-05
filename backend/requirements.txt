@@ -1,0 +1,6 @@
+# knowledge-assistant/backend/requirements.txt
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary  # Sterownik PostgreSQL
+python-dotenv    # Do ładowania zmiennych środowiskowych z pliku .env
