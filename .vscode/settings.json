@@ -1,5 +1,7 @@
 {
-
+    "files.associations": {
+    "*.tsx": "typescriptreact"
+  }
     // Konfiguracja Pylance (IntelliSense)
     "python.languageServer": "Pylance", // Upewnij się, że Pylance jest włączony
 
@@ -22,6 +24,7 @@
     // Jeśli chcesz używać Pylint, musisz go zainstalować: pip install pylint
     // "python.linting.pylintEnabled": true,
     // "python.linting.enabled": true,
+    
 
     // Wykluczanie folderów dla lepszej wydajności IntelliSense
     "files.exclude": {
@@ -44,6 +47,10 @@
         "**/build": true,
         "**/dist": true
     },
+     "files.associations": {
+    "*.tsx": "typescriptreact"
+  }
+    
     "python.analysis.extraPaths": [
         "./backend/app" // Opcjonalnie: Dodaj ścieżki, jeśli masz moduły, których Pylance nie znajduje
     ]

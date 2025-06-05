@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import './App.css';
+import './App.css'; // Nadal importujemy nasz plik CSS
 
 // Definicja typu dla KnowledgeItem, musi być zgodna z tym, co zwraca backend
 interface KnowledgeItem {
@@ -9,7 +9,7 @@ interface KnowledgeItem {
   original_filename: string | null;
   tags: string[];
   embedding: number[];
-  created_at: string; // Możesz użyć 'Date' jeśli parsujesz daty
+  created_at: string;
   updated_at: string;
 }
 
@@ -72,8 +72,6 @@ function App() {
     setLoading(true);
     setError(null);
     try {
-      // Pamiętaj, że backend oczekuje tych danych jako query parameters,
-      // chyba że zmienisz endpoint na Body(Form) lub Body(JSON)
       const params = new URLSearchParams();
       params.append('title', newNoteTitle);
       params.append('content', newNoteContent);
@@ -124,7 +122,7 @@ function App() {
 
       const response = await fetch('/api/knowledge_items/upload_pdf', {
         method: 'POST',
-        body: formData, // FormData automatycznie ustawia Content-Type: multipart/form-data
+        body: formData,
       });
 
       if (!response.ok) {
@@ -171,10 +169,10 @@ function App() {
   return (
     <div className="App">
       <h1>Knowledge Assistant</h1>
-      <p>Status Backendu: {backendStatus}</p>
+      <p className="status-message">Status Backendu: {backendStatus}</p>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {loading && <p>Ładowanie...</p>}
+      {error && <p className="status-message error">{error}</p>}
+      {loading && <p className="status-message loading">Ładowanie...</p>}
 
       <hr />
 
