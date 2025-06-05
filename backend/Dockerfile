@@ -29,4 +29,4 @@ EXPOSE 8000
 # `--port 8000` to port, na którym serwer nasłuchuje.
 # UWAGA: `--reload` jest świetne do developmentu (automatyczny restart serwera przy zmianach kodu),
 # ale NIE NALEŻY go używać w produkcji, gdyż jest nieefektywne.
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

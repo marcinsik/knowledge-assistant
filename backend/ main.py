@@ -9,13 +9,14 @@ from sentence_transformers import SentenceTransformer # Do generowania embedding
 import numpy as np # Do pracy z numpy array (embeddingami)
 from sqlalchemy import Column, ARRAY, Float
 from datetime import datetime
+from sqlalchemy.sql import text
 
 # --- Konfiguracja bazy danych ---
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@db:5432/knowledge_db")
 engine = None # Inicjalizacja engine na None
 max_retries = 10
 retry_delay = 5 # seconds
-#
+
 # --- Modele Danych (SQLModel) ---
 class KnowledgeItem(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
