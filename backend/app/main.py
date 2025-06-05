@@ -7,7 +7,7 @@ import time
 from pypdf import PdfReader # Do ekstrakcji PDF
 from sentence_transformers import SentenceTransformer # Do generowania embeddingów
 import numpy as np # Do pracy z numpy array (embeddingami)
-from sqlalchemy import Column, ARRAY, Float
+from sqlalchemy import Column, ARRAY, Float, String
 from datetime import datetime
 from sqlalchemy.sql import text
 
@@ -16,14 +16,14 @@ DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@db:5432/kno
 engine = None # Inicjalizacja engine na None
 max_retries = 10
 retry_delay = 5 # seconds
-
+#
 # --- Modele Danych (SQLModel) ---
 class KnowledgeItem(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     title: str
     text_content: str
     original_filename: Optional[str] = None
-    tags: List[str] = Field(default_factory=list, sa_column_kwargs={"type": "text[]"}) # Lista stringów jako tablica tekstowa w PG
+    tags: List[str] = Field(default_factory=list, sa_column=Column(ARRAY(String))) # Zmieniona linia
     # Embedding wektorowy: typ Array (np. 768 floatów) w PostgreSQL, Pythonowy numpy array
     # Musimy użyć Column(ARRAY(Float)) z SQLAlchemy, żeby pgvector to obsłużył
     embedding: Optional[List[float]] = Field(default=None, sa_column=Column(ARRAY(Float)))
@@ -185,3 +185,20 @@ async def get_knowledge_item(item_id: int, session: Session = Depends(get_sessio
     return item
 
 # TODO: Dodaj endpointy PUT i DELETE w przyszłości
+
+@app.get("/api/knowledge_items/search_semantic", response_model=List[KnowledgeItem])
+async def search_knowledge_items_semantic(
+    query: str,
+    session: Session = Depends(get_session)
+):
+    query_embedding = generate_embedding(query)
+
+    # Używamy operatora <=> dla odległości kosinusowej w pgvector
+    # Wyniki są sortowane po odległości (im mniejsza odległość, tym większe podobieństwo)
+    # Ograniczamy do 10 najbardziej podobnych wyników
+    results = session.exec(
+        select(KnowledgeItem)
+        .order_by(KnowledgeItem.embedding.cosine_distance(query_embedding))
+        .limit(10)
+    ).all()
+    return results

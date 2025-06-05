@@ -9,13 +9,17 @@ from sentence_transformers import SentenceTransformer # Do generowania embedding
 import numpy as np # Do pracy z numpy array (embeddingami)
 from sqlalchemy import Column, ARRAY, Float
 from datetime import datetime
+from sqlalchemy.sql import text
+
+# --- Aplikacja FastAPI ---
+app = FastAPI()
 
 # --- Konfiguracja bazy danych ---
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@db:5432/knowledge_db")
 engine = None # Inicjalizacja engine na None
 max_retries = 10
 retry_delay = 5 # seconds
-#
+
 # --- Modele Danych (SQLModel) ---
 class KnowledgeItem(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -92,8 +96,7 @@ def get_session():
     with Session(engine) as session:
         yield session
 
-# --- Aplikacja FastAPI ---
-app = FastAPI()
+
 
 # Zdarzenia startu/stopu aplikacji
 @app.on_event("startup")
@@ -184,3 +187,5 @@ async def get_knowledge_item(item_id: int, session: Session = Depends(get_sessio
     return item
 
 # TODO: Dodaj endpointy PUT i DELETE w przyszłości
+
+@
