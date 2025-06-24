@@ -1,19 +1,23 @@
+// Główny plik wejściowy aplikacji React - punkt startowy aplikacji Knowledge Assistant
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App'; // działa poprawnie z App.tsx
-import reportWebVitals from './reportWebVitals';
+import App from './App'; // Główny komponent aplikacji
+import './index.css'; // Globalne style CSS (Tailwind CSS)
+import reportWebVitals from './reportWebVitals'; // Narzędzie do mierzenia wydajności
 
+// Utworzenie root elementu React 18 dla renderowania aplikacji
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
+
+// Renderowanie aplikacji w trybie StrictMode (dodatkowe sprawdzenia w developmencie)
 root.render(
   <React.StrictMode>
     <App />
   </React.StrictMode>
 );
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+// Opcjonalne mierzenie wydajności aplikacji
+// Można przekazać funkcję do logowania wyników (np. reportWebVitals(console.log))
+// lub wysyłania do zewnętrznego serwisu analitycznego
 reportWebVitals();

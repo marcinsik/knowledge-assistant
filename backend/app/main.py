@@ -1,5 +1,6 @@
 # knowledge-assistant/backend/app/main.py
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Query
+from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Field, SQLModel, create_engine, Session, select
 from typing import Optional, List
 import os
@@ -13,6 +14,15 @@ from sklearn.metrics.pairwise import cosine_similarity # Do obliczania podobień
 
 # --- Aplikacja FastAPI ---
 app = FastAPI()
+
+# --- Konfiguracja CORS ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # Frontend URLs
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
+)
 
 # --- Konfiguracja bazy danych ---
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@db:5432/knowledge_db")
@@ -205,74 +215,6 @@ async def get_all_knowledge_items(session: Session = Depends(get_session)):
     return items
 
 
-# --- NOWOŚĆ: Endpoint do semantycznego wyszukiwania po tagach ---
-@app.get("/api/knowledge_items/tags_semantic_search_results", response_model=List[KnowledgeItem])
-async def search_by_tags_semantic(
-    query_tags: str = Query(..., description="Tags to search for, comma-separated."),
-    top_k: int = Query(5, description="Number of top similar items to return."),
-    session: Session = Depends(get_session)
-):
-    # Generowanie embeddingu dla zapytania (tagów)
-    query_tags_list = [tag.strip() for tag in query_tags.split(',')]
-    query_tags_concatenated = " ".join(query_tags_list)
-
-    if not query_tags_concatenated:
-        raise HTTPException(status_code=400, detail="Please provide at least one tag for semantic search.")
-
-    query_embedding = generate_embedding(query_tags_concatenated)
-
-    # Zapytanie do bazy danych używające operatora odległości L2 (Euklidesowej) pgvector
-    # 'embedding_vector <-> query_vector' -> odległość Euklidesowa
-    # 'embedding_vector <-> query_vector' ORDER BY odległość LIMIT k -> najbliżsi sąsiedzi
-    # Używamy operatora '<->' (L2 distance), pgvector obsługuje również '<=>' (cosinusowa) i '<#>' (wektor hamminga)
-    # Dla embeddingów SentenceTransformer cosinusowa odległość jest często preferowana, ale L2 też działa.
-    # Ważne: pgvector najlepiej działa, gdy operator jest na końcu (np. ORDER BY)
-    # Oczywiście, możesz użyć cosinusowej odległości zamiast L2: `embedding <=> :query_embedding`
-    # L2 distance jest często używana z ANN (Approximate Nearest Neighbor) indeksami.
-    # Wartość `text()` jest potrzebna, ponieważ SQLAlchemy/SQLModel nie obsługują bezpośrednio operatora `<->`
-    # dla ARRAY(Float) w ten sposób.
-    # Pamiętaj, że :query_embedding to placeholder dla wartości przekazanej do zapytania.
-
-    # Użyjemy odległości cosinusowej, która jest bardziej naturalna dla embeddingów ze SentenceTransformer.
-    # W pgvector, operator `<=>` zwraca odległość cosinusową (1 - podobieństwo cosinusowe), więc
-    # im mniejsza wartość, tym większe podobieństwo.
-    # docs: https://github.com/pgvector/pgvector#distance-functions
-    # A B <-> C D	L2 distance
-    # A B <=> C D	cosine distance
-    # A B <#> C D	inner product
-    
-    # Sortowanie po odległości cosinusowej:
-    # W postgres: (1 - (a <-> b)) - to jest similarity score
-    # Operator `<=>` w pgvector zwraca 1 - cosine_similarity.
-    # więc, aby uzyskać najwyższe podobieństwo, szukamy najmniejszej wartości z `<=>`.
-
-    try:
-        query_embedding_str = str(query_embedding).replace('array(', '').replace(')', '')
-
-        # KLUCZOWA ZMIANA: Użyj .bindparams() na obiekcie text()
-        sql_query = text("""
-            SELECT *, tags_embedding <=> :query_embedding::vector AS distance
-            FROM knowledgeitem
-            WHERE tags_embedding IS NOT NULL
-            ORDER BY distance ASC
-            LIMIT :limit
-        """).bindparams(
-            query_embedding=query_embedding, # Nadal przekazujemy List[float]
-            limit=top_k
-        )
-
-        results = session.exec(sql_query).all()
-
-        # Mapowanie wyników z text() na obiekty SQLModel
-        knowledge_items = []
-        for row in results:
-            item_data = row._mapping
-            knowledge_items.append(KnowledgeItem(**item_data))
-        
-        return knowledge_items
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Semantic tag search failed: {str(e)}")
 
 
 

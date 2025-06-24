@@ -1,41 +1,45 @@
-# knowledge-assistant/frontend/Dockerfile
+# Dockerfile dla aplikacji frontend Knowledge Assistant
+# Wieloetapowy build: budowanie aplikacji React i serwowanie przez Nginx
 
+# ETAP 1: Budowanie aplikacji React
 FROM node:20-alpine AS builder
 
+# Ustawienie katalogu roboczego
 WORKDIR /app
-COPY . .
+
+# Kopiowanie plików konfiguracyjnych npm (dla cache'owania warstw)
 COPY package.json ./
 COPY package-lock.json ./
 
+# Instalacja zależności npm
 RUN npm install
 
-# *** ZMIANA TUTAJ: BARDZO SELEKTYWNE KOPIOWANIE Z 'src' ***
-# Kopiuj kluczowe pliki z src indywidualnie
-COPY src/App.tsx ./src/App.tsx
-COPY src/index.tsx ./src/index.tsx
-COPY src/App.css ./src/App.css
-COPY src/logo.svg ./src/logo.svg
-COPY src/index.css ./src/index.css
+# Kopiowanie kodu źródłowego aplikacji
+COPY src ./src
 
-# Jeśli masz inne pliki w 'src' (np. reportWebVitals.tsx, setupTests.tsx, react-app-env.d.ts)
-# Musisz je dodać osobno, np.:
-# COPY src/reportWebVitals.ts ./src/reportWebVitals.ts
-# COPY src/setupTests.ts ./src/setupTests.ts
-
-
-# Kopiuj katalog public
+# Kopiowanie zasobów publicznych (ikony, manifest, itp.)
 COPY public ./public
 
-# Opcjonalnie: ponownie dodaj sleep dla debugowania, jeśli chcesz potwierdzić pliki
+# Kopiowanie pozostałych plików konfiguracyjnych
+COPY tsconfig.json ./
+
+# Opcjonalny sleep dla debugowania - można odkomentować w razie potrzeby
 # RUN echo "Entering debug mode. Connect with 'docker exec -it <container_id> sh'" && sleep 9999
 
+# Budowanie aplikacji React do produkcji
 RUN npm run build
 
+# ETAP 2: Serwowanie aplikacji przez Nginx
 FROM nginx:alpine
 
+# Kopiowanie konfiguracji Nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# Kopiowanie zbudowanej aplikacji z etapu builder
 COPY --from=builder /app/build /usr/share/nginx/html
 
+# Eksponowanie portu 80 dla HTTP
 EXPOSE 80
+
+# Uruchomienie Nginx w trybie foreground
 CMD ["nginx", "-g", "daemon off;"]

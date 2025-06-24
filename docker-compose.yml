@@ -1,16 +1,20 @@
+# Docker Compose dla aplikacji Knowledge Assistant
+# Definiuje wszystkie serwisy potrzebne do uruchomienia aplikacji
+
 version: '3.8'
 
 services:
+  # Baza danych PostgreSQL z rozszerzeniem pgvector dla wektorów embeddings
   db:
     image: ankane/pgvector:v0.5.1 
     environment:
-      POSTGRES_DB: knowledge_db
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      POSTGRES_DB: knowledge_db      # Nazwa bazy danych
+      POSTGRES_USER: user           # Użytkownik bazy danych
+      POSTGRES_PASSWORD: password   # Hasło do bazy danych
     volumes:
-      - pg_data:/var/lib/postgresql/data # <--- Użycie wolumenu nazwanego
+      - pg_data:/var/lib/postgresql/data # Trwałe przechowywanie danych
     ports:
-      - "5432:5432"
+      - "5432:5432"  # Mapowanie portu PostgreSQL
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user"]
       interval: 5s
@@ -18,37 +22,43 @@ services:
       retries: 5
       start_period: 30s
 
+  # Cache Redis dla sesji i tymczasowych danych
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "6379:6379"  # Mapowanie portu Redis
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5
 
+  # Serwis backend (FastAPI + Python)
   backend:
-    build: ./backend
+    build: ./backend              # Budowanie z lokalnego Dockerfile
     volumes:
-      - ./backend:/app
+      - ./backend:/app            # Montowanie kodu dla development
     ports:
-      - "8000:8000"
+      - "8000:8000"              # Mapowanie portu API
     depends_on:
       db:
-        condition: service_healthy
+        condition: service_healthy    # Czeka na gotowość bazy danych
       redis:
-        condition: service_healthy
+        condition: service_healthy    # Czeka na gotowość Redis
     environment:
       DATABASE_URL: postgresql://user:password@db:5432/knowledge_db
       REDIS_URL: redis://redis:6379
 
+  # Serwis frontend (React + Nginx)
   frontend:
-    build: ./frontend
+    build: ./frontend            # Budowanie z lokalnego Dockerfile
     ports:
-      - "3000:80"
+      - "3000:80"               # Mapowanie portu HTTP (Nginx na 80, dostępny na 3000)
     depends_on:
-      - backend
+      - backend                 # Czeka na uruchomienie backendu
+    environment:
+      REACT_APP_API_URL: http://localhost:8000  # URL backendu dla aplikacji React
 
+# Wolumeny dla trwałego przechowywania danych
 volumes:
-  pg_data: # <--- Deklaracja wolumenu nazwanego
+  pg_data:  # Wolumen dla danych PostgreSQL

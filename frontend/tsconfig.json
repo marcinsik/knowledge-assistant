@@ -1,25 +1,42 @@
 {
+  "_comment": "Konfiguracja TypeScript dla aplikacji frontend Knowledge Assistant",
   "compilerOptions": {
+    "_target_comment": "Wersja ECMAScript do której kompilować kod",
     "target": "es5",
+    "_lib_comment": "Biblioteki typów do włączenia w kompilacji",
     "lib": [
       "dom",
       "dom.iterable",
       "esnext"
     ],
+    "_allowJs_comment": "Pozwala na importowanie plików JavaScript",
     "allowJs": true,
+    "_skipLibCheck_comment": "Pomija sprawdzanie typów w plikach deklaracji",
     "skipLibCheck": true,
+    "_esModuleInterop_comment": "Umożliwia interoperacyjność z modułami CommonJS",
     "esModuleInterop": true,
+    "_allowSyntheticDefaultImports_comment": "Pozwala na domyślne importy z modułów bez domyślnego eksportu",
     "allowSyntheticDefaultImports": true,
+    "_strict_comment": "Włącza wszystkie ścisłe sprawdzenia typów",
     "strict": true,
+    "_forceConsistentCasingInFileNames_comment": "Wymusza spójność wielkości liter w nazwach plików",
     "forceConsistentCasingInFileNames": true,
+    "_noFallthroughCasesInSwitch_comment": "Zapobiega przypadkowemu przechodzeniu między case w switch",
     "noFallthroughCasesInSwitch": true,
+    "_module_comment": "System modułów do użycia",
     "module": "esnext",
+    "_moduleResolution_comment": "Strategia rozwiązywania modułów",
     "moduleResolution": "node",
+    "_resolveJsonModule_comment": "Pozwala na importowanie plików JSON",
     "resolveJsonModule": true,
+    "_isolatedModules_comment": "Każdy plik jest traktowany jako osobny moduł",
     "isolatedModules": true,
+    "_noEmit_comment": "Nie generuje plików wyjściowych (tylko sprawdzanie typów)",
     "noEmit": true,
+    "_jsx_comment": "Sposób obsługi składni JSX",
     "jsx": "react-jsx"
   },
+  "_include_comment": "Katalogi i pliki do włączenia w kompilacji",
   "include": [
     "src"
   ]
