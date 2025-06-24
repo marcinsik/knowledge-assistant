@@ -2,9 +2,9 @@
 
 **Knowledge Assistant** is a web application for storing, searching, and managing your personal knowledge base. You can add notes as text or upload PDF files, tag them, and quickly search through your knowledge items.
 
-## Features
+## Working Features
 
-- Add, edit, and delete knowledge items (notes or PDFs)
+- Add, delete knowledge items (notes or PDFs)
 - Tag your notes for easy organization
 - Full-text search and filtering
 - Responsive, user-friendly interface
