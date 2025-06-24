@@ -1,5 +1,6 @@
 # knowledge-assistant/backend/app/main.py
-from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Query
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form
+from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Field, SQLModel, create_engine, Session, select
 from typing import Optional, List
@@ -141,9 +142,9 @@ async def root():
 
 @app.post("/api/knowledge_items/upload_text", response_model=KnowledgeItem)
 async def upload_text_note(
-    title: str,
-    content: str,
-    tags: Optional[str] = None, # Tagi jako string rozdzielony przecinkami
+    title: str = Form(...), # Użyj Form do oznaczenia, że to pole formularza
+    content: str = Form(...), # Użyj Form do oznaczenia, że to pole formularza
+    tags: Optional[str] = Form(None), # Opcjonalne pole formularza
     session: Session = Depends(get_session)
 ):
     item_tags = [tag.strip() for tag in tags.split(',')] if tags else []
