@@ -1,12 +1,10 @@
-# Docker Compose dla aplikacji Knowledge Assistant
-# Definiuje wszystkie serwisy potrzebne do uruchomienia aplikacji
+# docker-compose.yml
 
-version: '3.8'
 
 services:
   # Baza danych PostgreSQL z rozszerzeniem pgvector dla wektorów embeddings
   db:
-    image: ankane/pgvector:v0.5.1 
+    image: ankane/pgvector:v0.5.1
     environment:
       POSTGRES_DB: knowledge_db      # Nazwa bazy danych
       POSTGRES_USER: user           # Użytkownik bazy danych
@@ -49,15 +47,46 @@ services:
       DATABASE_URL: postgresql://user:password@db:5432/knowledge_db
       REDIS_URL: redis://redis:6379
 
-  # Serwis frontend (React + Nginx)
+  # Serwis frontend (React - tryb deweloperski)
   frontend:
-    build: ./frontend            # Budowanie z lokalnego Dockerfile
+    # Określ, skąd budować obraz i który Dockerfile użyć.
+    # Właściwości 'context' i 'dockerfile' muszą być zagnieżdżone pod 'build'.
+    build:
+      context: ./frontend
+      dockerfile: DockerFile.dev # Użyj pliku DockerFile.dev
+
+    # Mapowanie portów: HOST_PORT:CONTAINER_PORT
+    # Serwer deweloperski Reacta domyślnie nasłuchuje na porcie 3000 w kontenerze.
+    # Mapujemy go na port 3000 na Twoim hoście.
     ports:
-      - "3000:80"               # Mapowanie portu HTTP (Nginx na 80, dostępny na 3000)
-    depends_on:
-      - backend                 # Czeka na uruchomienie backendu
+      - "3000:3000"
+
+    # --- KLUCZOWE DLA HOT-RELOADING I DEVELOPOMENTU ---
+    volumes:
+      # 1. Mapuj lokalny katalog z kodem Reacta do katalogu /app w kontenerze.
+      #    Dzięki temu zmiany w plikach na Twoim komputerze są od razu widoczne w kontenerze.
+      - ./frontend:/app
+      # 2. Utwórz oddzielny wolumen dla node_modules Wewnątrz kontenera.
+      #    Jest to ważne, aby zależności były zainstalowane w kontenerze i nie kolidowały
+      #    z lokalnymi node_modules, które mogą mieć specyficzne dla OS pliki.
+      - /app/node_modules
+
+    # Zmienne środowiskowe dla kontenera frontend.
     environment:
-      REACT_APP_API_URL: http://localhost:8000  # URL backendu dla aplikacji React
+      # Opcjonalnie: CHOKIDAR_USEPOLLING=true jest często potrzebne na macOS i Windows (WSL1),
+      # aby serwer deweloperski Reacta poprawnie wykrywał zmiany plików w zmapowanych wolumenach.
+      # Jeśli hot-reloading nie działa, odkomentuj tę linię.
+      # - CHOKIDAR_USEPOLLING=true
+
+      # Upewnij się, że Twoja aplikacja React zna adres URL Twojego backendu.
+      # "backend" to nazwa serwisu backendu w tym pliku docker-compose.yml.
+      # Docker Compose tworzy wewnętrzną sieć, w której serwisy mogą komunikować się
+      # używając swoich nazw jako nazw hostów.
+      - REACT_APP_API_URL=http://127.0.0.1:8000 # Poprawiony URL, aby odwoływał się do serwisu backendu w sieci Docker Compose
+
+    # Czeka na uruchomienie backendu
+    depends_on:
+      - backend
 
 # Wolumeny dla trwałego przechowywania danych
 volumes:
