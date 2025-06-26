@@ -227,7 +227,7 @@ async def get_all_knowledge_items(session: Session = Depends(get_session)):
     items = session.exec(select(KnowledgeItem)).all()
     return items
 
-@app.get("/api/knowledge_items/pdf/{item_id}")
+@app.get("/api/knowledge_items/pdf/{item_id}") #NOT WORKING
 def download_pdf(item_id: int, session: Session = Depends(get_session)):
     item = session.get(KnowledgeItem, item_id)
     if not item or not item.original_filename:
@@ -244,7 +244,7 @@ def download_pdf(item_id: int, session: Session = Depends(get_session)):
         headers={"Content-Disposition": f"attachment; filename={item.original_filename}"}
     )
 
-@app.get("/api/knowledge_items/note_pdf/{item_id}")
+@app.get("/api/knowledge_items/note_pdf/{item_id}") ##NOT WORKING
 def download_note_as_pdf(item_id: int, session: Session = Depends(get_session)):
     item = session.get(KnowledgeItem, item_id)
     if not item:
@@ -274,5 +274,9 @@ def download_note_as_pdf(item_id: int, session: Session = Depends(get_session)):
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
+
+
+
+
 
 # TODO: Dodaj endpointy PUT i DELETE w przyszłości

@@ -1,0 +1,22 @@
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Zależności
+node_modules/
+
+# Pliki środowiskowe
+.env
+.env.development
+.env.production
+.env.local
+
+# Pliki kompilacji/build
+dist/
+build/
+*.log
+*.zip
+
+# Inne
+.DS_Store
+.vscode/
