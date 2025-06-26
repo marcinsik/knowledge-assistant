@@ -8,3 +8,4 @@ sentence-transformers==4.1.0
 numpy==2.2.6
 python-dotenv
 python-multipart
+fpdf

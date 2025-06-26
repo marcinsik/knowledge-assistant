@@ -9,6 +9,96 @@ interface KnowledgeItemDetailProps {
   onDelete: (id: number) => void;
 }
 
+const handleDownloadPdf = async (itemId, isNote = false) => {
+  try {
+    const endpoint = isNote 
+      ? `/api/knowledge_items/note_pdf/${itemId}`
+      : `/api/knowledge_items/pdf/${itemId}`;
+    
+    console.log('Downloading from:', endpoint); // Debug
+    
+    const response = await fetch(endpoint);
+    
+    console.log('Response status:', response.status); // Debug
+    console.log('Response headers:', Object.fromEntries(response.headers.entries())); // Debug
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Server error:', errorText); // Debug
+      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+    }
+    
+    // Sprawdź Content-Type
+    const contentType = response.headers.get('Content-Type');
+    console.log('Content-Type:', contentType); // Debug
+    
+    if (!contentType || !contentType.includes('application/pdf')) {
+      const responseText = await response.text();
+      console.error('Expected PDF but got:', contentType, responseText.substring(0, 200)); // Debug
+      throw new Error(`Server returned ${contentType} instead of PDF`);
+    }
+    
+    // Pobierz filename z nagłówków
+    const contentDisposition = response.headers.get('Content-Disposition');
+    let filename = isNote ? `note_${itemId}.pdf` : `document_${itemId}.pdf`;
+    
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1].replace(/['"]/g, '');
+      }
+    }
+    
+    console.log('Downloading as:', filename); // Debug
+    
+    const blob = await response.blob();
+    console.log('Blob size:', blob.size, 'Blob type:', blob.type); // Debug
+    
+    // Sprawdź czy blob jest PDF
+    if (blob.type && !blob.type.includes('application/pdf')) {
+      console.error('Blob is not PDF:', blob.type);
+      // Sprawdź zawartość jako tekst
+      const text = await blob.text();
+      console.error('Blob content preview:', text.substring(0, 200));
+      throw new Error(`Downloaded file is ${blob.type}, not PDF`);
+    }
+    
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    
+    console.log('Download completed successfully'); // Debug
+  } catch (error) {
+    console.error('Błąd pobierania PDF:', error);
+    alert(`Wystąpił błąd podczas pobierania pliku PDF: ${error.message}`);
+  }
+};
+
+// Test endpoint - dodaj ten przycisk do debugowania
+const testEndpoint = async (itemId, isNote = false) => {
+  const endpoint = isNote 
+    ? `/api/knowledge_items/note_pdf/${itemId}`
+    : `/api/knowledge_items/pdf/${itemId}`;
+  
+  try {
+    const response = await fetch(endpoint);
+    const text = await response.text();
+    console.log('Raw response:', {
+      status: response.status,
+      headers: Object.fromEntries(response.headers.entries()),
+      body: text.substring(0, 500)
+    });
+  } catch (error) {
+    console.error('Test failed:', error);
+  }
+};
+
 const KnowledgeItemDetail: React.FC<KnowledgeItemDetailProps> = ({ item, onBack, onEdit, onDelete }) => {
   return (
     <div className="item-details">
@@ -21,11 +111,30 @@ const KnowledgeItemDetail: React.FC<KnowledgeItemDetailProps> = ({ item, onBack,
           <button onClick={() => onEdit(item)} className="item-details__action item-details__action--edit">
             <Edit className="item-details__action-icon" /> Edytuj
           </button>
-          {item.original_filename && (
-            <button onClick={() => window.open(`/api/knowledge_items/download/${item.id}`)} className="item-details__action item-details__action--download">
-              <Download className="item-details__action-icon" /> Pobierz
-            </button>
-          )}
+         {item.original_filename && (
+            <a
+                href={`/api/knowledge_items/pdf/${item.id}`}
+                className="item-details__action item-details__action--download"
+                download
+                onClick={(e) => {
+                // Możesz dodać logowanie kliknięcia
+                console.log('PDF link clicked');
+                }}
+            >
+                <Download className="item-details__action-icon" /> Pobierz PDF
+            </a>
+            )}
+
+            <a
+            href={`/api/knowledge_items/note_pdf/${item.id}`}
+            className="item-details__action item-details__action--download"
+            download
+            onClick={(e) => {
+                console.log('Note PDF link clicked');
+            }}
+            >
+            <Download className="item-details__action-icon" /> Pobierz notatkę jako PDF
+            </a>
           <button onClick={() => onDelete(item.id)} className="item-details__action item-details__action--delete">
             <Trash2 className="item-details__action-icon" /> Usuń
           </button>

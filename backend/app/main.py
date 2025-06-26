@@ -12,6 +12,9 @@ import numpy as np # Do pracy z numpy array (embeddingami)
 from sqlalchemy import Column, ARRAY, Float, String, text # Dodaj String tutaj
 from datetime import datetime
 from sklearn.metrics.pairwise import cosine_similarity # Do obliczania podobieństwa cosinusowego
+from fastapi.responses import FileResponse, StreamingResponse
+from fpdf import FPDF
+import shutil
 
 # --- Aplikacja FastAPI ---
 app = FastAPI()
@@ -120,6 +123,10 @@ def get_session():
     with Session(engine) as session:
         yield session
 
+# Ścieżka do katalogu na pliki PDF
+PDF_UPLOAD_DIR = os.getenv("PDF_UPLOAD_DIR", "uploaded_pdfs")
+os.makedirs(PDF_UPLOAD_DIR, exist_ok=True)
+
 # Zdarzenia startu/stopu aplikacji
 @app.on_event("startup")
 def on_startup():
@@ -177,6 +184,11 @@ async def upload_pdf_file(
     session: Session = Depends(get_session)
 ):
     try:
+        # Zapisz oryginalny plik PDF na dysku
+        pdf_path = os.path.join(PDF_UPLOAD_DIR, pdf_file.filename)
+        with open(pdf_path, "wb") as f:
+            shutil.copyfileobj(pdf_file.file, f)
+        pdf_file.file.seek(0)  # Reset do ekstrakcji tekstu
         # Ekstrakcja tekstu z PDF
         reader = PdfReader(pdf_file.file)
         full_text = ""
@@ -215,10 +227,52 @@ async def get_all_knowledge_items(session: Session = Depends(get_session)):
     items = session.exec(select(KnowledgeItem)).all()
     return items
 
+@app.get("/api/knowledge_items/pdf/{item_id}")
+def download_pdf(item_id: int, session: Session = Depends(get_session)):
+    item = session.get(KnowledgeItem, item_id)
+    if not item or not item.original_filename:
+        raise HTTPException(status_code=404, detail="PDF not found for this item.")
+    
+    pdf_path = os.path.join(PDF_UPLOAD_DIR, item.original_filename)
+    if not os.path.exists(pdf_path):
+        raise HTTPException(status_code=404, detail="PDF file not found on server.")
+    
+    return FileResponse(
+        pdf_path, 
+        media_type="application/pdf", 
+        filename=item.original_filename,
+        headers={"Content-Disposition": f"attachment; filename={item.original_filename}"}
+    )
 
-
-
-
-
+@app.get("/api/knowledge_items/note_pdf/{item_id}")
+def download_note_as_pdf(item_id: int, session: Session = Depends(get_session)):
+    item = session.get(KnowledgeItem, item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Note not found.")
+    
+    # Create PDF from note text
+    pdf = FPDF()
+    pdf.add_page()
+    
+    # Add content with proper encoding
+    title_text = f"Tytuł: {item.title}"
+    content_text = f"\n\n{item.text_content}"
+    
+    pdf.multi_cell(0, 10, title_text)
+    pdf.multi_cell(0, 10, content_text)
+    
+    # Generate PDF as bytes
+    pdf_bytes = BytesIO()
+    pdf_output = pdf.output(dest='S').encode('latin1')
+    pdf_bytes.write(pdf_output)
+    pdf_bytes.seek(0)
+    
+    filename = f"note_{item_id}.pdf"
+    
+    return StreamingResponse(
+        BytesIO(pdf_output),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
 
 # TODO: Dodaj endpointy PUT i DELETE w przyszłości
