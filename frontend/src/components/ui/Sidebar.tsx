@@ -10,9 +10,9 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, activeView, onViewChange }) => {
   const menuItems = [
-    { id: 'all', label: 'All Items', icon: FileText },
-    { id: 'add', label: 'Add New', icon: Plus },
-    { id: 'settings', label: 'Settings', icon: Settings }
+    { id: 'all', label: 'Wszystkie notatki', icon: FileText },
+    { id: 'add', label: 'Dodaj nową', icon: Plus },
+    { id: 'settings', label: 'Ustawienia', icon: Settings }
   ];
 
   return (
@@ -21,7 +21,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, activeView, onViewC
       <div className={`sidebar ${isOpen ? 'sidebar--open' : 'sidebar--closed'}`}>
         <div className="sidebar__inner">
           <div className="sidebar__header">
-            <h1 className="sidebar__title">Knowledge Assistant</h1>
+            <h1 className="sidebar__title">Asystent Wiedzy</h1>
             <button onClick={onToggle} className="sidebar__close">
               <X className="sidebar__close-icon" />
             </button>

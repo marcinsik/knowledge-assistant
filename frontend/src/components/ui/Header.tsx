@@ -24,7 +24,7 @@ const Header: React.FC<HeaderProps> = ({ title, searchQuery, onSearchChange, isD
           <Search className="header__search-icon" />
           <input
             type="text"
-            placeholder="Search knowledge items..."
+            placeholder="Szukaj notatek..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="header__search-input"

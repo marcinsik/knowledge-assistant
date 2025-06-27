@@ -1,6 +1,7 @@
 import { AlertCircle, FileText, Plus } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import AddItemForm from './components/ui/AddItemForm';
+import EditItemForm from './components/ui/EditItemForm';
 import FilterSidebar from './components/ui/FilterSidebar';
 import Header from './components/ui/Header';
 import KnowledgeItemCard from './components/ui/KnowledgeItemCard';
@@ -32,6 +33,7 @@ const App: React.FC = () => {
   });
   const [simpleToasts, setSimpleToasts] = useState<{id: string, type: ToastType, message: string}[]>([]);
   const [filteredItems, setFilteredItems] = useState<KnowledgeItem[]>([]);
+  const [editingItem, setEditingItem] = useState<KnowledgeItem | null>(null);
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // Load knowledge items
@@ -100,14 +102,14 @@ const App: React.FC = () => {
           pdf_file: data.file,
           tags: data.tags
         });
-        addSimpleToast('success', 'PDF uploaded successfully!');
+        addSimpleToast('success', 'PDF został pomyślnie wgrany!');
       } else if (data.content) {
         newItem = await apiService.uploadTextNote({
           title: data.title,
           content: data.content!,
           tags: data.tags
         });
-        addSimpleToast('success', 'Text note saved successfully!');
+        addSimpleToast('success', 'Notatka została pomyślnie zapisana!');
       } else {
         throw new Error('No content or file provided');
       }
@@ -128,26 +130,61 @@ const App: React.FC = () => {
   };
 
   const handleDeleteItem = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this item?')) {
+    if (window.confirm('Czy na pewno chcesz usunąć ten element?')) {
       try {
         await apiService.deleteKnowledgeItem(id);
         setKnowledgeItems(prev => prev.filter(item => item.id !== id));
         if (selectedItem?.id === id) {
           setSelectedItem(null);
         }
-        addSimpleToast('success', 'Item deleted successfully!');
+        addSimpleToast('success', 'Element został pomyślnie usunięty!');
       } catch (err: any) {
-        addSimpleToast('error', err.message || 'Failed to delete item!');
+        addSimpleToast('error', err.message || 'Nie udało się usunąć elementu!');
       }
+    }
+  };
+
+  const handleEditItem = async (id: number, data: { title: string; content: string; tags: string }) => {
+    try {
+      setSubmitting(true);
+      const updatedItem = await apiService.updateKnowledgeItem(id, {
+        title: data.title,
+        content: data.content,
+        tags: data.tags
+      });
+      
+      // Aktualizuj listę notatek
+      setKnowledgeItems(prev => 
+        prev.map(item => item.id === id ? updatedItem : item)
+      );
+      
+      // Aktualizuj filtrowane wyniki
+      setFilteredItems(prev => 
+        prev.map(item => item.id === id ? updatedItem : item)
+      );
+      
+      // Jeśli edytujemy aktualnie wybraną notatkę, zaktualizuj ją
+      if (selectedItem?.id === id) {
+        setSelectedItem(updatedItem);
+      }
+      
+      setEditingItem(null);
+      addSimpleToast('success', 'Element został pomyślnie zaktualizowany!');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update item';
+      addSimpleToast('error', errorMessage);
+      throw err;
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const getViewTitle = () => {
     switch (activeView) {
-      case 'all': return 'Knowledge Assistant';
-      case 'add': return 'Add New Item';
-      case 'settings': return 'Settings';
-      default: return 'Knowledge Assistant';
+      case 'all': return 'Asystent Wiedzy';
+      case 'add': return 'Dodaj nową notatkę';
+      case 'settings': return 'Ustawienia';
+      default: return 'Asystent Wiedzy';
     }
   };
 
@@ -177,7 +214,7 @@ const App: React.FC = () => {
         } catch (err) {
           console.error('Semantic search error:', err);
           setFilteredItems([]);
-          addSimpleToast('error', 'Semantic search failed!');
+          addSimpleToast('error', 'Wyszukiwanie semantyczne nie powiodło się!');
         } finally {
           setLoading(false);
         }
@@ -261,7 +298,14 @@ const App: React.FC = () => {
               onSidebarToggle={() => setSidebarOpen(true)}
             />
             <main className="app-content">
-              {activeView === 'add' ? (
+              {editingItem ? (
+                <EditItemForm
+                  item={editingItem}
+                  onSubmit={handleEditItem}
+                  onCancel={() => setEditingItem(null)}
+                  loading={submitting}
+                />
+              ) : activeView === 'add' ? (
                 <AddItemForm
                   onSubmit={handleAddItem}
                   onCancel={() => setActiveView('all')}
@@ -269,14 +313,14 @@ const App: React.FC = () => {
                 />
               ) : activeView === 'settings' ? (
                 <div className="settings-panel">
-                  <h3 className="settings-panel__title">Settings</h3>
-                  <p className="settings-panel__desc">Settings panel - coming soon!</p>
+                  <h3 className="settings-panel__title">Ustawienia</h3>
+                  <p className="settings-panel__desc">Panel ustawień - wkrótce!</p>
                 </div>
               ) : selectedItem ? (
                   <KnowledgeItemDetail
                     item={selectedItem}
                     onBack={() => setSelectedItem(null)}
-                    onEdit={item => {/* obsługa edycji */}}
+                    onEdit={item => setEditingItem(item)}
                     onDelete={handleDeleteItem}
                   />
               ) : (
@@ -284,7 +328,7 @@ const App: React.FC = () => {
                   <div className="item-list__header">
                     <div className="item-list__header-left">
                       <h3 className="item-list__count">
-                        {filteredItems.length} items found
+                        Znaleziono {filteredItems.length} elementów
                       </h3>
                       {(searchQuery || filters.tags.length > 0 || filters.type !== 'all') && (
                         <button
@@ -299,7 +343,7 @@ const App: React.FC = () => {
                           }}
                           className="item-list__clear-filters"
                         >
-                          Clear all filters
+                          Wyczyść wszystkie filtry
                         </button>
                       )}
                     </div>
@@ -308,17 +352,17 @@ const App: React.FC = () => {
                       className="item-list__add-btn"
                     >
                       <Plus className="item-list__add-icon" />
-                      Add New
+                      Dodaj nową
                     </button>
                   </div>
                   {filteredItems.length === 0 ? (
                     <div className="item-list__empty">
                       <FileText className="item-list__empty-icon" />
-                      <h3 className="item-list__empty-title">No items found</h3>
+                      <h3 className="item-list__empty-title">Nie znaleziono elementów</h3>
                       <p className="item-list__empty-desc">
                         {searchQuery || filters.tags.length > 0 || filters.type !== 'all'
-                          ? 'Try adjusting your search or filters'
-                          : 'Get started by adding your first knowledge item'
+                          ? 'Spróbuj dostosować wyszukiwanie lub filtry'
+                          : 'Zacznij od dodania swojej pierwszej notatki'
                         }
                       </p>
                       <button
@@ -326,7 +370,7 @@ const App: React.FC = () => {
                         className="item-list__add-btn"
                       >
                         <Plus className="item-list__add-icon" />
-                        Add Your First Item
+                        Dodaj swoją pierwszą notatkę
                       </button>
                     </div>
                   ) : (

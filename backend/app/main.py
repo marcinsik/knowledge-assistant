@@ -418,5 +418,48 @@ def semantic_search(
     return final_results
 
 
+# --- Endpoint do edycji notatki ---
+@app.put("/api/knowledge_items/{item_id}", response_model=KnowledgeItem)
+def update_knowledge_item(
+    item_id: int,
+    title: str = Form(...),
+    content: str = Form(...),
+    tags: str = Form(""),
+    session: Session = Depends(get_session)
+):
+    """Aktualizacja istniejącej notatki (tylko treść tekstowa, nie pliki PDF)"""
+    print(f"Updating item {item_id}: title='{title}', tags='{tags}'")
+    
+    # Znajdź istniejący element
+    item = session.get(KnowledgeItem, item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    # Nie pozwalaj edytować plików PDF (tylko notatki tekstowe)
+    if item.original_filename:
+        raise HTTPException(status_code=400, detail="Cannot edit PDF files, only text notes")
+    
+    # Aktualizuj dane
+    item.title = title
+    item.text_content = content
+    
+    # Aktualizuj tagi
+    if tags.strip():
+        item.tags = [tag.strip() for tag in tags.split(',') if tag.strip()]
+    else:
+        item.tags = []
+    
+    # Wygeneruj nowy embedding dla zaktualizowanej treści
+    combined_text = f"{title} {content} {' '.join(item.tags)}"
+    item.embedding = generate_embedding(combined_text)
+    
+    # Zapisz zmiany
+    session.add(item)
+    session.commit()
+    session.refresh(item)
+    
+    print(f"Item {item_id} updated successfully")
+    return item
 
-# TODO: Dodaj endpointy PUT i DELETE w przyszłości
+
+# TODO: Dodaj endpoint DELETE w przyszłości

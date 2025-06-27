@@ -27,6 +27,13 @@ export interface CreatePdfItemRequest {
   tags?: string; // Tagi oddzielone przecinkami
 }
 
+// Interfejs dla żądania edycji notatki
+export interface UpdateTextItemRequest {
+  title: string;
+  content: string;
+  tags?: string; // Tagi oddzielone przecinkami
+}
+
 // Adres URL backendu - pobierany ze zmiennej środowiskowej lub domyślny localhost
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
@@ -106,6 +113,38 @@ class ApiService {
 
     return this.request('/api/knowledge_items/upload_pdf', {
       method: 'POST',
+      headers: {}, // Usunięcie Content-Type aby przeglądarka ustawiła go automatycznie dla FormData
+      body: formData,
+    });
+  }
+
+  // Edycja istniejącej notatki tekstowej
+  async updateTextItem(id: number, data: UpdateTextItemRequest): Promise<KnowledgeItem> {
+    const formData = new FormData();
+    formData.append('title', data.title);
+    formData.append('content', data.content);
+    if (data.tags) {
+      formData.append('tags', data.tags);
+    }
+
+    return this.request(`/api/knowledge_items/update_text/${id}`, {
+      method: 'POST',
+      headers: {}, // Usunięcie Content-Type aby przeglądarka ustawiła go automatycznie dla FormData
+      body: formData,
+    });
+  }
+
+  // Aktualizacja notatki tekstowej (nowy endpoint PUT)
+  async updateKnowledgeItem(id: number, data: UpdateTextItemRequest): Promise<KnowledgeItem> {
+    const formData = new FormData();
+    formData.append('title', data.title);
+    formData.append('content', data.content);
+    if (data.tags) {
+      formData.append('tags', data.tags);
+    }
+
+    return this.request(`/api/knowledge_items/${id}`, {
+      method: 'PUT',
       headers: {}, // Usunięcie Content-Type aby przeglądarka ustawiła go automatycznie dla FormData
       body: formData,
     });

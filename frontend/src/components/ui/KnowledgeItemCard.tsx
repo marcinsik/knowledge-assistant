@@ -50,7 +50,7 @@ const KnowledgeItemCard: React.FC<KnowledgeItemCardProps> = ({ item, onEdit, onD
           className="item-card__action item-card__action--edit"
         >
           <Edit className="item-card__action-icon" />
-          Edit
+          Edytuj
         </button>
         {item.original_filename && (
           <button
@@ -61,7 +61,7 @@ const KnowledgeItemCard: React.FC<KnowledgeItemCardProps> = ({ item, onEdit, onD
             className="item-card__action item-card__action--download"
           >
             <Download className="item-card__action-icon" />
-            Download
+            Pobierz
           </button>
         )}
         <button
@@ -72,7 +72,7 @@ const KnowledgeItemCard: React.FC<KnowledgeItemCardProps> = ({ item, onEdit, onD
           className="item-card__action item-card__action--delete"
         >
           <Trash2 className="item-card__action-icon" />
-          Delete
+          Usuń
         </button>
       </div>
     </div>

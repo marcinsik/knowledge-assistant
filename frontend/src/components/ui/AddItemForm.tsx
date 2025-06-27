@@ -42,7 +42,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ onSubmit, onCancel, loading }
   return (
     <div className="add-form">
       <div className="add-form__header">
-        <h3 className="add-form__title">Add New Knowledge Item</h3>
+        <h3 className="add-form__title">Dodaj nową notatkę</h3>
         <button onClick={onCancel} className="add-form__close" disabled={loading}>
           <X className="add-form__close-icon" />
         </button>
@@ -56,7 +56,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ onSubmit, onCancel, loading }
             className={`add-form__tab${activeTab === 'text' ? ' add-form__tab--active' : ''}`}
           >
             <FileText className="add-form__tab-icon" />
-            Add Text
+            Dodaj tekst
           </button>
           <button
             type="button"
@@ -65,13 +65,13 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ onSubmit, onCancel, loading }
             className={`add-form__tab${activeTab === 'pdf' ? ' add-form__tab--active' : ''}`}
           >
             <Upload className="add-form__tab-icon" />
-            Upload PDF
+            Wgraj PDF
           </button>
         </div>
       </div>
       <form onSubmit={handleSubmit} className="add-form__fields">
         <div className="add-form__field">
-          <label className="add-form__label">Title</label>
+          <label className="add-form__label">Tytuł</label>
           <input
             type="text"
             value={formData.title}
@@ -79,11 +79,12 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ onSubmit, onCancel, loading }
             className="add-form__input"
             required
             disabled={loading}
+            placeholder="Wprowadź tytuł..."
           />
         </div>
         {activeTab === 'text' ? (
           <div className="add-form__field">
-            <label className="add-form__label">Content</label>
+            <label className="add-form__label">Treść</label>
             <textarea
               value={formData.content}
               onChange={(e) => setFormData({ ...formData, content: e.target.value })}
@@ -91,15 +92,16 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ onSubmit, onCancel, loading }
               className="add-form__textarea"
               required
               disabled={loading}
+              placeholder="Wprowadź treść notatki..."
             />
           </div>
         ) : (
           <div className="add-form__field">
-            <label className="add-form__label">PDF File</label>
+            <label className="add-form__label">Plik PDF</label>
             <div className="add-form__file-drop">
               <Upload className="add-form__file-drop-icon" />
               <p className="add-form__file-desc">
-                Drag and drop your PDF file here, or click to browse
+                Przeciągnij i upuść plik PDF tutaj, lub kliknij aby wybrać
               </p>
               <input
                 type="file"
@@ -111,28 +113,28 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ onSubmit, onCancel, loading }
                 disabled={loading}
               />
               <label htmlFor="pdf-upload" className="add-form__file-btn">
-                Choose File
+                Wybierz plik
               </label>
               {formData.file && (
                 <p className="add-form__file-selected">
-                  Selected: {formData.file.name}
+                  Wybrany: {formData.file.name}
                 </p>
               )}
             </div>
           </div>
         )}
         <div className="add-form__field">
-          <label className="add-form__label">Tags</label>
+          <label className="add-form__label">Tagi</label>
           <input
             type="text"
             value={formData.tags}
             onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-            placeholder="Enter tags separated by commas"
+            placeholder="Wprowadź tagi oddzielone przecinkami"
             className="add-form__input"
             disabled={loading}
           />
           <p className="add-form__help">
-            Separate tags with commas (e.g., React, JavaScript, Frontend)
+            Oddziel tagi przecinkami (np. React, JavaScript, Frontend)
           </p>
         </div>
         <div className="add-form__actions">
@@ -142,16 +144,16 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ onSubmit, onCancel, loading }
             className="add-form__btn-cancel"
             disabled={loading}
           >
-            Cancel
+            Anuluj
           </button>
           <button
             type="submit"
             className="add-form__btn-submit"
             disabled={loading}
           >
-            {loading && <span className="add-form__btn-label--loading">Processing...</span>}
+            {loading && <span className="add-form__btn-label--loading">Przetwarzanie...</span>}
             <span className={loading ? 'add-form__btn-label--loading' : ''}>
-              {loading ? 'Processing...' : (activeTab === 'text' ? 'Save' : 'Upload')}
+              {loading ? 'Przetwarzanie...' : (activeTab === 'text' ? 'Zapisz' : 'Wgraj')}
             </span>
           </button>
         </div>
