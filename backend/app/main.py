@@ -1,5 +1,5 @@
 # knowledge-assistant/backend/app/main.py
-from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form, Query
 from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Field, SQLModel, create_engine, Session, select
@@ -15,6 +15,7 @@ from sklearn.metrics.pairwise import cosine_similarity # Do obliczania podobień
 from fastapi.responses import FileResponse, StreamingResponse
 from fpdf import FPDF
 import shutil
+from io import BytesIO
 
 # --- Aplikacja FastAPI ---
 app = FastAPI()
@@ -106,8 +107,9 @@ def get_embedding_model():
     global model
     if model is None:
         print("Loading Sentence Transformer model...")
-        model = SentenceTransformer('all-MiniLM-L12-v2')
-        print("Sentence Transformer model loaded.")
+        # Użyj modelu wielojęzycznego który lepiej obsługuje polski
+        model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
+        print("Multilingual Sentence Transformer model loaded.")
     return model
 
 def generate_embedding(text: str) -> List[float]:
@@ -276,6 +278,144 @@ def download_note_as_pdf(item_id: int, session: Session = Depends(get_session)):
     )
 
 
+
+@app.get("/api/knowledge_items/delete/{item_id}")
+async def delete_knowledge_item(item_id: int, session: Session = Depends(get_session)):
+    item = session.get(KnowledgeItem, item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Knowledge item not found.")
+    session.delete(item)
+    session.commit()
+    return {"message": "Knowledge item deleted successfully."}
+
+@app.get("/api/knowledge_items/semantic_search", response_model=List[KnowledgeItem])
+def semantic_search(
+    query: str = Query(..., description="Fraza do wyszukania semantycznego"),
+    top_k: int = Query(10, description="Liczba wyników do zwrócenia"),
+    threshold: float = Query(0.3, description="Minimalny próg podobieństwa (0.0-1.0)"),
+    session: Session = Depends(get_session)
+):
+    print(f"Hybrid search: query='{query}', top_k={top_k}, threshold={threshold}")
+    
+    # Pobierz wszystkie notatki
+    items = session.exec(select(KnowledgeItem)).all()
+    
+    if not items:
+        print("No items found")
+        return []
+    
+    print(f"Found {len(items)} total items")
+    
+    # 1. WYSZUKIWANIE TEKSTOWE (dokładne dopasowania)
+    query_lower = query.lower()
+    text_matches = []
+    exact_matches = []  # Dla bardzo dokładnych dopasowań
+    
+    for item in items:
+        text_score = 0.0
+        is_exact = False
+        
+        # Sprawdź tytuł (największa waga)
+        if query_lower == item.title.lower():
+            text_score += 10.0  # Bardzo wysoka waga dla dokładnego tytułu
+            is_exact = True
+        elif query_lower in item.title.lower():
+            text_score += 5.0
+            is_exact = True
+        
+        # Sprawdź tagi (bardzo wysoka waga)
+        for tag in item.tags:
+            if query_lower == tag.lower():
+                text_score += 8.0
+                is_exact = True
+            elif query_lower in tag.lower():
+                text_score += 3.0
+        
+        # Sprawdź treść (niższa waga)
+        if query_lower in item.text_content.lower():
+            text_score += 1.0
+        
+        if text_score > 0:
+            text_matches.append((item, text_score, is_exact))
+            if is_exact:
+                exact_matches.append((item, text_score))
+    
+    print(f"Text matches: {len(text_matches)}, exact matches: {len(exact_matches)}")
+    
+    # 2. STRATEGIA WYSZUKIWANIA
+    if exact_matches:
+        # Jeśli mamy dokładne dopasowania, ogranicz semantic search
+        print("Found exact matches, using stricter semantic search")
+        semantic_threshold = max(threshold, 0.5)  # Wyższy próg
+        max_semantic = 3  # Maksymalnie 3 dodatkowe wyniki semantyczne
+    else:
+        # Brak dokładnych dopasowań, użyj normalnego semantic search
+        print("No exact matches, using normal semantic search")
+        semantic_threshold = threshold
+        max_semantic = top_k
+    
+    # 3. WYSZUKIWANIE SEMANTYCZNE
+    query_emb = generate_embedding(query)
+    embeddings = [item.embedding for item in items if item.embedding]
+    
+    semantic_matches = []
+    if embeddings:
+        similarities = cosine_similarity([query_emb], embeddings)[0]
+        semantic_candidates = [
+            (item, sim)
+            for item, sim in zip(items, similarities)
+            if item.embedding is not None and sim >= semantic_threshold
+        ]
+        
+        # Usuń elementy które już są w text_matches
+        text_match_ids = {item.id for item, _, _ in text_matches}
+        semantic_matches = [
+            (item, sim) for item, sim in semantic_candidates
+            if item.id not in text_match_ids
+        ][:max_semantic]
+        
+        print(f"Semantic matches above {semantic_threshold}: {len(semantic_matches)}")
+    
+    # 4. KOMBINUJ WYNIKI
+    combined_scores = {}
+    
+    # Dodaj wyniki tekstowe (najwyższa waga)
+    for item, score, is_exact in text_matches:
+        combined_scores[item.id] = {
+            'item': item,
+            'text_score': score,
+            'semantic_score': 0.0,
+            'combined_score': score,
+            'is_exact': is_exact
+        }
+    
+    # Dodaj wyniki semantyczne (tylko te nie z text_matches)
+    for item, score in semantic_matches:
+        combined_scores[item.id] = {
+            'item': item,
+            'text_score': 0.0,
+            'semantic_score': score,
+            'combined_score': score * 2.0,  # Niższa waga niż tekst
+            'is_exact': False
+        }
+    
+    # 5. POSORTUJ I ZWRÓĆ WYNIKI
+    sorted_results = sorted(
+        combined_scores.values(),
+        key=lambda x: (x['is_exact'], x['combined_score']),  # Najpierw exact, potem score
+        reverse=True
+    )
+    
+    print(f"Combined unique results: {len(sorted_results)}")
+    for i, result in enumerate(sorted_results[:5]):  # Log first 5
+        exact_flag = " [EXACT]" if result['is_exact'] else ""
+        print(f"  {i+1}. {result['item'].title[:40]}...{exact_flag} "
+              f"text:{result['text_score']:.1f} semantic:{result['semantic_score']:.3f}")
+    
+    # Zwróć top_k wyników
+    final_results = [result['item'] for result in sorted_results[:top_k]]
+    print(f"Returning {len(final_results)} results")
+    return final_results
 
 
 

@@ -38,6 +38,7 @@ class ApiService {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
+    console.log('API Request:', url, options.method || 'GET');
     
     // Konfiguracja domyślna dla zapytań JSON
     const config: RequestInit = {
@@ -50,6 +51,7 @@ class ApiService {
 
     try {
       const response = await fetch(url, config);
+      console.log('API Response:', response.status, response.statusText);
       
       // Sprawdzenie czy odpowiedź jest poprawna
       if (!response.ok) {
@@ -57,7 +59,10 @@ class ApiService {
         throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
       }
 
-      return await response.json();
+      // Pobierz JSON odpowiedzi
+      const data = await response.json();
+      
+      return data;
     } catch (error) {
       console.error(`API request failed: ${endpoint}`, error);
       throw error;
@@ -109,6 +114,23 @@ class ApiService {
   // Wyszukiwanie elementów wiedzy (funkcja przygotowana na przyszłą implementację w backendzie)
   async searchKnowledgeItems(query: string): Promise<KnowledgeItem[]> {
     return this.request(`/api/knowledge_items/search?q=${encodeURIComponent(query)}`);
+  }
+
+  // Usuwanie elementu wiedzy po id
+  async deleteKnowledgeItem(id: number): Promise<{ message: string }> {
+    // Użyj GET, bo taki jest endpoint w backendzie (lepiej byłoby DELETE, ale trzymamy się backendu)
+    return this.request(`/api/knowledge_items/delete/${id}`, { method: 'GET' });
+  }
+
+  // Wyszukiwanie semantyczne po embeddingach
+  async semanticSearch(query: string, topK = 10): Promise<KnowledgeItem[]> {
+    const params = new URLSearchParams({ 
+      query, 
+      top_k: topK.toString()
+      // threshold używa domyślnej wartości z backendu (0.5)
+    });
+    const result = await this.request<KnowledgeItem[]>(`/api/knowledge_items/semantic_search?${params.toString()}`);
+    return result;
   }
 }
 

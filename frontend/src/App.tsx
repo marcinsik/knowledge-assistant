@@ -1,7 +1,6 @@
 import { AlertCircle, FileText, Plus } from 'lucide-react';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import AddItemForm from './components/ui/AddItemForm';
-import { ErrorMessage } from './components/ui/ErrorMessage';
 import FilterSidebar from './components/ui/FilterSidebar';
 import Header from './components/ui/Header';
 import KnowledgeItemCard from './components/ui/KnowledgeItemCard';
@@ -15,6 +14,7 @@ import { filterKnowledgeItems, FilterState } from './utils/filterKnowledgeItems'
 
 // --- Main App Component ---
 const App: React.FC = () => {
+  // Wszystkie hooki na górze komponentu!
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeView, setActiveView] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -31,6 +31,8 @@ const App: React.FC = () => {
     sortOrder: 'desc'
   });
   const [simpleToasts, setSimpleToasts] = useState<{id: string, type: ToastType, message: string}[]>([]);
+  const [filteredItems, setFilteredItems] = useState<KnowledgeItem[]>([]);
+  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // Load knowledge items
   const loadKnowledgeItems = useCallback(async () => {
@@ -39,18 +41,52 @@ const App: React.FC = () => {
       setError(null);
       const items = await apiService.getKnowledgeItems();
       setKnowledgeItems(items);
+      setFilteredItems(items);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load items';
       setError(errorMessage);
     } finally {
       setLoading(false);
     }
-  }, [ErrorMessage]);
+  }, []);
+
+  // Toast functions
+  const removeSimpleToast = useCallback((id: string) => {
+    setSimpleToasts(prev => prev.filter(t => t.id !== id));
+  }, []);
+
+  const addSimpleToast = useCallback((type: ToastType, message: string) => {
+    const id = Date.now().toString();
+    setSimpleToasts(prev => [...prev, { id, type, message }]);
+    setTimeout(() => removeSimpleToast(id), 4000);
+  }, [removeSimpleToast]);
 
   useEffect(() => {
     loadKnowledgeItems();
   }, [loadKnowledgeItems]);
 
+  // Zapobieganie cofaniu się strony przy naciśnięciu Backspace
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Jeśli naciśnięto Backspace i nie ma aktywnego pola input/textarea/contenteditable
+      if (e.key === 'Backspace') {
+        const target = e.target as HTMLElement;
+        const isInputField = target.tagName === 'INPUT' || 
+                            target.tagName === 'TEXTAREA' || 
+                            target.isContentEditable;
+        
+        if (!isInputField) {
+          e.preventDefault(); // Zapobiegaj domyślnemu zachowaniu (cofanie strony)
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   // Handle form submission
   const handleAddItem = async (data: { title: string; content?: string; file?: File; tags: string }) => {
@@ -77,6 +113,10 @@ const App: React.FC = () => {
       }
 
       setKnowledgeItems(prev => [newItem, ...prev]);
+      // Jeśli nie ma wyszukiwania, dodaj też do filteredItems
+      if (!searchQuery.trim()) {
+        setFilteredItems(prev => [newItem, ...prev]);
+      }
       setActiveView('all');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to add item';
@@ -87,13 +127,18 @@ const App: React.FC = () => {
     }
   };
 
-  const handleDeleteItem = (id: number) => {
+  const handleDeleteItem = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this item?')) {
-      setKnowledgeItems(prev => prev.filter(item => item.id !== id));
-      if (selectedItem?.id === id) {
-        setSelectedItem(null);
+      try {
+        await apiService.deleteKnowledgeItem(id);
+        setKnowledgeItems(prev => prev.filter(item => item.id !== id));
+        if (selectedItem?.id === id) {
+          setSelectedItem(null);
+        }
+        addSimpleToast('success', 'Item deleted successfully!');
+      } catch (err: any) {
+        addSimpleToast('error', err.message || 'Failed to delete item!');
       }
-      addSimpleToast('success', 'Item deleted successfully!');
     }
   };
 
@@ -106,9 +151,56 @@ const App: React.FC = () => {
     }
   };
 
-  const filtered = filterKnowledgeItems(knowledgeItems, searchQuery, filters);
   const availableTags = Array.from(new Set(knowledgeItems.flatMap(item => item.tags))).sort();
 
+  // SEMANTIC SEARCH z debounce
+  useEffect(() => {
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current);
+    }
+    
+    if (searchQuery.trim()) {
+      debounceTimeout.current = setTimeout(async () => {
+        try {
+          setLoading(true);
+          // Wykonaj wyszukiwanie semantyczne (threshold 0.5 ustawiony w backendzie)
+          const results = await apiService.semanticSearch(searchQuery, 50);
+          console.log('Semantic search completed:', results.length, 'results');
+          console.log('Sample results:', results.slice(0, 3).map(r => ({ title: r.title, tags: r.tags })));
+          
+          // Następnie zastosuj lokalne filtry na wynikach semantycznych
+          const filteredResults = filterKnowledgeItems(results, '', filters);
+          console.log('After local filters:', filteredResults.length, 'results');
+          console.log('Active filters:', filters);
+          
+          setFilteredItems(filteredResults);
+        } catch (err) {
+          console.error('Semantic search error:', err);
+          setFilteredItems([]);
+          addSimpleToast('error', 'Semantic search failed!');
+        } finally {
+          setLoading(false);
+        }
+      }, 350);
+    }
+    
+    // Cleanup function
+    return () => {
+      if (debounceTimeout.current) {
+        clearTimeout(debounceTimeout.current);
+      }
+    };
+  }, [searchQuery, filters, addSimpleToast]);
+
+  // Effect dla lokalnych filtrów (gdy nie ma zapytania tekstowego LUB gdy się zmienią dane)
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      const locallyFiltered = filterKnowledgeItems(knowledgeItems, '', filters);
+      setFilteredItems(locallyFiltered);
+    }
+  }, [filters, knowledgeItems, searchQuery]);
+
+  // Dopiero po hookach warunki zwracające JSX:
   if (loading) {
     return (
       <div className="app-loading">
@@ -138,13 +230,10 @@ const App: React.FC = () => {
     );
   }
 
-  const addSimpleToast = (type: ToastType, message: string) => {
-    const id = Date.now().toString();
-    setSimpleToasts(prev => [...prev, { id, type, message }]);
-    setTimeout(() => removeSimpleToast(id), 4000);
-  };
-  const removeSimpleToast = (id: string) => {
-    setSimpleToasts(prev => prev.filter(t => t.id !== id));
+  // Funkcja do obsługi zmiany widoku z Sidebara
+  const handleSidebarViewChange = (view: string) => {
+    setActiveView(view);
+    setSelectedItem(null); // zawsze wracaj do listy, nawet jeśli był wybrany szczegół
   };
 
   return (
@@ -155,7 +244,7 @@ const App: React.FC = () => {
             isOpen={sidebarOpen}
             onToggle={() => setSidebarOpen(!sidebarOpen)}
             activeView={activeView}
-            onViewChange={setActiveView}
+            onViewChange={handleSidebarViewChange}
           />
           <FilterSidebar
             filters={filters}
@@ -195,7 +284,7 @@ const App: React.FC = () => {
                   <div className="item-list__header">
                     <div className="item-list__header-left">
                       <h3 className="item-list__count">
-                        {filtered.length} items found
+                        {filteredItems.length} items found
                       </h3>
                       {(searchQuery || filters.tags.length > 0 || filters.type !== 'all') && (
                         <button
@@ -222,7 +311,7 @@ const App: React.FC = () => {
                       Add New
                     </button>
                   </div>
-                  {filtered.length === 0 ? (
+                  {filteredItems.length === 0 ? (
                     <div className="item-list__empty">
                       <FileText className="item-list__empty-icon" />
                       <h3 className="item-list__empty-title">No items found</h3>
@@ -242,7 +331,7 @@ const App: React.FC = () => {
                     </div>
                   ) : (
                     <div className="item-list__grid">
-                      {filtered.map((item: KnowledgeItem) => (
+                      {filteredItems.map((item: KnowledgeItem) => (
                         <KnowledgeItemCard
                           key={item.id}
                           item={item}
