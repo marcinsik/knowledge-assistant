@@ -13,7 +13,9 @@
 ## Technology Stack
 
 - **Frontend:** React + TypeScript
-- **Backend:** FastAPI (Python)
+- **Backend:** FastAPI (Python) + Alembic (database migrations)
+- **Database:** PostgreSQL with pgvector (vector embeddings)
+- **Search:** Semantic search with Sentence Transformers
 - **UI Icons:** [Lucide React](https://lucide.dev/)
 - **Containerization:** Docker & Docker Compose
 
@@ -42,6 +44,9 @@
 3. **Access the application:**
    - Frontend: [http://localhost:3000](http://localhost:3000)
    - Backend API: [http://localhost:8000](http://localhost:8000)
+
+4. **Database migrations:**
+   Migrations run automatically on container startup. For manual migration management, see [MIGRATIONS.md](MIGRATIONS.md).
 
 ---
 
@@ -76,6 +81,19 @@
    # or
    yarn start
    ```
+
+---
+
+## Database Migrations
+
+This project uses Alembic for database schema management. Migrations run automatically when you start the application with Docker.
+
+For detailed migration management, see [MIGRATIONS.md](MIGRATIONS.md).
+
+### Quick Migration Commands
+
+- **Create new migration:** `./create_migration.sh "migration name"`
+- **Run migrations manually:** `./migrate.sh`
 
 ---
 
