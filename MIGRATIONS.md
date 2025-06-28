@@ -4,54 +4,65 @@ Ten projekt używa Alembic do zarządzania migracjami bazy danych w środowisku 
 
 ## Automatyczne migracje
 
-Migracje uruchamiają się automatycznie przy starcie kontenera backend:
-
-```bash
-docker-compose up backend
-```
+Migracje uruchamiają się automatycznie przy starcie kontenera backend. Skrypt inicjalizujący w pliku `backend/Dockerfile` tworzy niezbędne tabele w bazie danych.
 
 ## Manualne zarządzanie migracjami
 
-### 1. Uruchomienie migracji
+### 1. Uruchomienie shella w kontenerze
 ```bash
-./migrate.sh
+docker compose exec backend bash
 ```
 
 ### 2. Tworzenie nowej migracji
 ```bash
-./create_migration.sh "nazwa migracji"
+cd /app/app
+alembic revision --autogenerate -m "nazwa migracji"
 ```
 Przykład:
 ```bash
-./create_migration.sh "dodaj kolumnę kategorie"
+alembic revision --autogenerate -m "dodaj kolumnę kategorie"
 ```
 
 ### 3. Sprawdzenie statusu migracji
 ```bash
-docker-compose run --rm backend bash -c "cd /app/app && alembic current"
+cd /app/app
+alembic current
 ```
 
 ### 4. Historia migracji
 ```bash
-docker-compose run --rm backend bash -c "cd /app/app && alembic history"
+cd /app/app
+alembic history
 ```
 
-### 5. Cofnięcie migracji
+### 5. Zastosowanie migracji
 ```bash
-docker-compose run --rm backend bash -c "cd /app/app && alembic downgrade -1"
+cd /app/app
+alembic upgrade head
+```
+
+### 6. Cofnięcie migracji
+```bash
+cd /app/app
+alembic downgrade -1
 ```
 
 ## Workflow przy zmianie modeli
 
 1. **Zmodyfikuj model** w `backend/app/main.py`
-2. **Utwórz migrację**:
+2. **Uruchom shell w kontenerze**:
    ```bash
-   ./create_migration.sh "opis zmian"
+   docker compose exec backend bash
    ```
-3. **Sprawdź wygenerowaną migrację** w `backend/app/alembic/versions/`
-4. **Zastosuj migrację**:
+3. **Utwórz migrację**:
    ```bash
-   ./migrate.sh
+   cd /app/app
+   alembic revision --autogenerate -m "opis zmian"
+   ```
+4. **Sprawdź wygenerowaną migrację** w `backend/app/alembic/versions/`
+5. **Zastosuj migrację**:
+   ```bash
+   alembic upgrade head
    ```
 
 ## Przenoszenie na nowy komputer
@@ -59,7 +70,7 @@ docker-compose run --rm backend bash -c "cd /app/app && alembic downgrade -1"
 1. **Sklonuj repozytorium**
 2. **Uruchom projekt**:
    ```bash
-   docker-compose up --build
+   docker compose up --build
    ```
 3. **Migracje uruchomią się automatycznie** przy pierwszym starcie
 
@@ -67,14 +78,11 @@ docker-compose run --rm backend bash -c "cd /app/app && alembic downgrade -1"
 
 ```
 backend/
-├── run_migrations.py          # Skrypt automatycznych migracji
 ├── app/
 │   ├── alembic.ini           # Konfiguracja Alembic
 │   ├── alembic/
 │   │   ├── env.py            # Środowisko migracji
 │   │   └── versions/         # Pliki migracji
-├── migrate.sh                # Skrypt manualnych migracji
-└── create_migration.sh       # Skrypt tworzenia migracji
 ```
 
 ## Rozwiązywanie problemów
@@ -82,22 +90,22 @@ backend/
 ### Problem: Baza danych niedostępna
 ```bash
 # Sprawdź status kontenerów
-docker-compose ps
+docker compose ps
 
 # Sprawdź logi bazy danych
-docker-compose logs db
+docker compose logs db
 ```
 
 ### Problem: Konflikt migracji
 ```bash
 # Sprawdź aktualny stan
-docker-compose run --rm backend bash -c "cd /app/app && alembic current"
+docker compose exec backend bash -c "cd /app/app && alembic current"
 
 # Sprawdź historię
-docker-compose run --rm backend bash -c "cd /app/app && alembic history"
+docker compose exec backend bash -c "cd /app/app && alembic history"
 
 # W razie potrzeby cofnij migrację
-docker-compose run --rm backend bash -c "cd /app/app && alembic downgrade <revision>"
+docker compose exec backend bash -c "cd /app/app && alembic downgrade <revision>"
 ```
 
 ### Problem: Potrzebujesz czystej bazy danych

@@ -1,52 +1,126 @@
 # Knowledge Assistant
 
-**Knowledge Assistant** is a web application for storing, searching, and managing your personal knowledge base. You can add notes as text or upload PDF files, tag them, and quickly search through your knowledge items.
+**Knowledge Assistant** to aplikacja webowa do przechowywania, wyszukiwania i zarządzania osobistą bazą wiedzy. Możesz dodawać notatki jako tekst lub przesyłać pliki PDF, oznaczać je tagami i szybko wyszukiwać w elementach bazy wiedzy.
 
-## Working Features
+## Funkcje
 
-- Add, delete knowledge items (notes or PDFs)
-- Tag your notes for easy organization
-- Full-text search and filtering
-- Responsive, user-friendly interface
-- Toast notifications for actions and errors
+- Dodawanie, usuwanie elementów wiedzy (notatki lub PDF)
+- Oznaczanie notatek tagami dla łatwej organizacji
+- Wyszukiwanie pełnotekstowe i wyszukiwanie semantyczne
+- Filtrowanie według tagów
+- Responsywny, przyjazny dla użytkownika interfejs
+- Powiadomienia toast dla akcji i błędów
 
-## Technology Stack
+## Technologia
 
 - **Frontend:** React + TypeScript
-- **Backend:** FastAPI (Python) + Alembic (database migrations)
-- **Database:** PostgreSQL with pgvector (vector embeddings)
-- **Search:** Semantic search with Sentence Transformers
-- **UI Icons:** [Lucide React](https://lucide.dev/)
-- **Containerization:** Docker & Docker Compose
+- **Backend:** FastAPI (Python) + Alembic (migracje bazy danych)
+- **Baza danych:** PostgreSQL z pgvector (wektory embeddingów)
+- **Wyszukiwanie:** Wyszukiwanie semantyczne z Sentence Transformers
+- **Ikony UI:** [Lucide React](https://lucide.dev/)
+- **Konteneryzacja:** Docker & Docker Compose
 
-## Getting Started
+## Wymagania
 
-### Prerequisites
+- [Docker](https://www.docker.com/) i [Docker Compose](https://docs.docker.com/compose/) (v2 lub nowszy)
 
-- [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/)
+## Uruchomienie aplikacji
 
----
+### Pierwsze uruchomienie
 
-## Running with Docker
+```bash
+# Sklonuj repozytorium
+git clone https://github.com/username/knowledge-assistant.git
+cd knowledge-assistant
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/yourusername/knowledge-assistant.git
-   cd knowledge-assistant
-   ```
+# Kopiuj przykładowy plik .env (opcjonalne)
+cp backend/.env.example backend/.env
 
-2. **Build and start all services:**
-   ```bash
-   docker compose up --build
-   ```
-   This will build and start both the backend and frontend containers.
+# Zbuduj i uruchom aplikację w trybie deweloperskim
+docker compose up --build
+```
 
-3. **Access the application:**
-   - Frontend: [http://localhost:3000](http://localhost:3000)
-   - Backend API: [http://localhost:8000](http://localhost:8000)
+### Wersja deweloperska (z hot-reloadingiem)
 
-4. **Database migrations:**
-   Migrations run automatically on container startup. For manual migration management, see [MIGRATIONS.md](MIGRATIONS.md).
+```bash
+# Zbuduj i uruchom wszystkie serwisy
+docker compose up
+```
+
+### Wersja produkcyjna
+
+```bash
+# Zbuduj i uruchom wersję produkcyjną
+docker compose -f docker-compose.prod.yml up --build
+```
+
+### Dostęp do aplikacji
+
+- **Deweloperska:** [http://localhost:3000](http://localhost:3000)
+- **Produkcyjna:** [http://localhost](http://localhost)
+- **API Backend:** [http://localhost:8000](http://localhost:8000)
+
+### Zarządzanie bazą danych
+
+Aplikacja automatycznie tworzy tabele w bazie danych przy pierwszym uruchomieniu. Aby zresetować dane:
+
+```bash
+# Zatrzymaj i usuń wszystkie kontenery wraz z wolumenami
+docker compose down -v
+```
+
+## Konfiguracja
+
+Wszystkie zmienne konfiguracyjne są ustawione w plikach `docker-compose.yml` i `docker-compose.prod.yml`.
+
+### Migracje bazy danych
+
+Migracje bazy danych są wykonywane automatycznie podczas uruchamiania kontenera backend.
+
+Aby ręcznie wykonać operacje na migracjach:
+
+```bash
+# Uruchom shell w kontenerze backend
+docker compose exec backend bash
+
+# Wewnątrz kontenera, przejdź do katalogu z alembic.ini
+cd /app/app
+
+# Sprawdź aktualną wersję migracji
+alembic current
+
+# Sprawdź historię migracji
+alembic history
+
+# Utwórz nową migrację
+alembic revision --autogenerate -m "opis_migracji"
+
+# Zastosuj migracje
+alembic upgrade head
+```
+
+## Struktura projektu
+
+```
+knowledge-assistant/
+├── docker-compose.yml         # Konfiguracja Docker dla środowiska dev
+├── docker-compose.prod.yml    # Konfiguracja Docker dla środowiska produkcyjnego
+├── backend/                   # Kod backendu FastAPI
+│   ├── Dockerfile             # Obraz Docker dla backendu
+│   ├── requirements.txt       # Zależności Pythona
+│   ├── app/                   # Moduł aplikacji
+│   │   ├── alembic/           # Migracje bazy danych
+│   │   ├── uploaded_pdfs/     # Katalog na przesłane pliki PDF
+│   │   ├── main.py            # Główny plik aplikacji
+│   │   └── ...
+├── frontend/                  # Kod frontendu React
+│   ├── Dockerfile.dev         # Obraz Docker dla środowiska dev
+│   ├── Dockerfile.prod        # Obraz Docker dla środowiska produkcyjnego
+│   ├── nginx.conf             # Konfiguracja Nginx dla produkcji
+│   ├── package.json           # Zależności npm
+│   ├── src/                   # Kod źródłowy React
+│   └── ...
+```
 
 ---
 
@@ -54,50 +128,52 @@
 
 ### Backend (FastAPI)
 
-1. **Install dependencies:**
+1. **Zainstaluj zależności:**
    ```bash
    cd backend
    pip install -r requirements.txt
    ```
 
-2. **Run the backend server:**
+2. **Uruchom serwer backend:**
    ```bash
-   uvicorn main:app --reload
+   cd backend
+   uvicorn app.main:app --reload
    ```
 
 ### Frontend (React)
 
-1. **Install dependencies:**
+1. **Zainstaluj zależności:**
    ```bash
    cd frontend
    npm install
-   # or
-   yarn install
    ```
 
-2. **Start the frontend development server:**
+2. **Uruchom serwer deweloperski:**
    ```bash
+   cd frontend
    npm start
-   # or
-   yarn start
    ```
 
----
+## Struktura projektu
 
-## Database Migrations
-
-This project uses Alembic for database schema management. Migrations run automatically when you start the application with Docker.
-
-For detailed migration management, see [MIGRATIONS.md](MIGRATIONS.md).
-
-### Quick Migration Commands
-
-- **Create new migration:** `./create_migration.sh "migration name"`
-- **Run migrations manually:** `./migrate.sh`
-
----
-
-## Configuration
+```
+knowledge-assistant/
+├── backend/                # Kod backendu FastAPI
+│   ├── app/                # Moduł aplikacji
+│   │   ├── alembic/        # Migracje bazy danych
+│   │   ├── uploaded_pdfs/  # Katalog na przesłane PDF
+│   │   ├── main.py         # Główny plik aplikacji
+│   │   └── alembic.ini     # Konfiguracja migracji
+│   ├── Dockerfile          # Konfiguracja kontenera backend
+│   └── requirements.txt    # Zależności Pythona
+├── frontend/               # Kod frontendu React
+│   ├── src/                # Kod źródłowy React
+│   ├── DockerFile.dev      # Konfiguracja kontenera dev
+│   ├── Dockerfile.prod     # Konfiguracja kontenera prod
+│   └── nginx.conf          # Konfiguracja serwera Nginx
+├── docker-compose.yml      # Konfiguracja dev
+└── docker-compose.prod.yml # Konfiguracja produkcyjna
+```
 
 - The backend API URL is set to `http://localhost:8000` by default in the frontend code.  
   If you need to change it, edit the `API_BASE_URL` constant in `frontend/src/App.tsx`.

@@ -11,18 +11,23 @@ WORKDIR /app
 # mogła być buforowana przez Dockera, jeśli requirements.txt się nie zmieni.
 COPY requirements.txt .
 
-# Instalujemy zależności npm.
-# Użycie `pip install --upgrade pip` zapewnia, że używasz najnowszej wersji pip.
+# Instalujemy zależności Python
 RUN pip install --upgrade pip && pip install --no-cache-dir --resume-retries 5 -r requirements.txt
+
 # Kopiujemy resztę kodu aplikacji do katalogu roboczego.
-# Kropka na końcu oznacza "skopiuj całą zawartość bieżącego katalogu (czyli 'backend') do WORKDIR /app".
 COPY . .
 
-# Uczyń skrypty wykonywalne
-RUN chmod +x run_migrations.py start.sh
+# Tworzenie i ustawienie uprawnień dla katalogu na pliki PDF
+RUN mkdir -p /app/app/uploaded_pdfs && \
+    chmod -R 777 /app/app/uploaded_pdfs
 
-# Wystawiamy port, na którym nasłuchuje FastAPI. Informuje Dockera, że aplikacja używa tego portu.
+# Kopiowanie skryptu entrypoint
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+
+# Wystawiamy port, na którym nasłuchuje FastAPI.
+EXPOSE 8000
 EXPOSE 8000
 
-# Komenda do uruchomienia aplikacji z migracjami
-CMD ["/app/start.sh"]
+# Komenda do uruchomienia aplikacji
+CMD ["/app/docker-entrypoint.sh"]

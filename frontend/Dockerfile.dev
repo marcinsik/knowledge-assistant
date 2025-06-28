@@ -1,0 +1,22 @@
+# frontend/Dockerfile.dev
+
+# Użyj stabilnego obrazu Node.js z Alpine Linux, jest lżejszy.
+FROM node:20-alpine
+
+# Ustaw katalog roboczy w kontenerze.
+WORKDIR /app
+
+# Kopiuj tylko pliki z zależnościami. To pozwala Dockerowi na cachowanie tej warstwy.
+COPY package.json package-lock.json* ./
+
+# Zainstaluj wszystkie zależności npm
+RUN npm install
+
+# Wskaż, że kontener będzie nasłuchiwał na porcie 3000.
+EXPOSE 3000
+
+# Włącz tryb polling dla lepszej kompatybilności na różnych systemach
+ENV CHOKIDAR_USEPOLLING=true
+
+# Uruchom serwer deweloperski Reacta
+CMD ["npm", "start"]
