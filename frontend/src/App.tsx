@@ -16,22 +16,22 @@ import { filterKnowledgeItems, FilterState } from './utils/filterKnowledgeItems'
 // --- Main App Component ---
 const App: React.FC = () => {
   // Wszystkie hooki na górze komponentu!
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeView, setActiveView] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+  const [activeView, setActiveView] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [knowledgeItems, setKnowledgeItems] = useState<KnowledgeItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<KnowledgeItem | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [submitting, setSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<FilterState>({
     tags: [],
     type: 'all',
     sortBy: 'date',
-    sortOrder: 'desc'
+    sortOrder: 'desc',
   });
-  const [simpleToasts, setSimpleToasts] = useState<{id: string, type: ToastType, message: string}[]>([]);
+  const [simpleToasts, setSimpleToasts] = useState<{ id: string; type: ToastType; message: string }[]>([]);
   const [filteredItems, setFilteredItems] = useState<KnowledgeItem[]>([]);
   const [editingItem, setEditingItem] = useState<KnowledgeItem | null>(null);
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -54,12 +54,12 @@ const App: React.FC = () => {
 
   // Toast functions
   const removeSimpleToast = useCallback((id: string) => {
-    setSimpleToasts(prev => prev.filter(t => t.id !== id));
+    setSimpleToasts((prev: { id: string; type: ToastType; message: string }[]) => prev.filter((t) => t.id !== id));
   }, []);
 
   const addSimpleToast = useCallback((type: ToastType, message: string) => {
     const id = Date.now().toString();
-    setSimpleToasts(prev => [...prev, { id, type, message }]);
+    setSimpleToasts((prev: { id: string; type: ToastType; message: string }[]) => [...prev, { id, type, message }]);
     setTimeout(() => removeSimpleToast(id), 4000);
   }, [removeSimpleToast]);
 
@@ -190,52 +190,45 @@ const App: React.FC = () => {
 
   const availableTags = Array.from(new Set(knowledgeItems.flatMap(item => item.tags))).sort();
 
-  // SEMANTIC SEARCH z debounce
+  // SEMANTIC SEARCH z debounce - optymalizowane
   useEffect(() => {
     if (debounceTimeout.current) {
       clearTimeout(debounceTimeout.current);
     }
-    
+
     if (searchQuery.trim()) {
       debounceTimeout.current = setTimeout(async () => {
         try {
-          setLoading(true);
-          // Wykonaj wyszukiwanie semantyczne (threshold 0.5 ustawiony w backendzie)
           const results = await apiService.semanticSearch(searchQuery, 50);
-          console.log('Semantic search completed:', results.length, 'results');
-          console.log('Sample results:', results.slice(0, 3).map(r => ({ title: r.title, tags: r.tags })));
-          
-          // Następnie zastosuj lokalne filtry na wynikach semantycznych
           const filteredResults = filterKnowledgeItems(results, '', filters);
-          console.log('After local filters:', filteredResults.length, 'results');
-          console.log('Active filters:', filters);
-          
           setFilteredItems(filteredResults);
         } catch (err) {
           console.error('Semantic search error:', err);
           setFilteredItems([]);
           addSimpleToast('error', 'Wyszukiwanie semantyczne nie powiodło się!');
-        } finally {
-          setLoading(false);
         }
       }, 350);
+    } else {
+      // Jeśli searchQuery jest pusty, natychmiast pokaż wszystkie elementy
+      const locallyFiltered = filterKnowledgeItems(knowledgeItems, '', filters);
+      setFilteredItems(locallyFiltered);
     }
-    
-    // Cleanup function
+
     return () => {
       if (debounceTimeout.current) {
         clearTimeout(debounceTimeout.current);
       }
     };
-  }, [searchQuery, filters, addSimpleToast]);
+  }, [searchQuery, filters, knowledgeItems, addSimpleToast]);
 
   // Effect dla lokalnych filtrów (gdy nie ma zapytania tekstowego LUB gdy się zmienią dane)
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      const locallyFiltered = filterKnowledgeItems(knowledgeItems, '', filters);
-      setFilteredItems(locallyFiltered);
-    }
-  }, [filters, knowledgeItems, searchQuery]);
+  // Ten efekt jest teraz obsługiwany w głównym useEffect powyżej
+  // useEffect(() => {
+  //   if (!searchQuery.trim()) {
+  //     const locallyFiltered = filterKnowledgeItems(knowledgeItems, '', filters);
+  //     setFilteredItems(locallyFiltered);
+  //   }
+  // }, [filters, knowledgeItems, searchQuery]);
 
   // Dopiero po hookach warunki zwracające JSX:
   if (loading) {

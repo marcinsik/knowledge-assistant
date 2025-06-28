@@ -34,7 +34,11 @@
     "_noEmit_comment": "Nie generuje plików wyjściowych (tylko sprawdzanie typów)",
     "noEmit": true,
     "_jsx_comment": "Sposób obsługi składni JSX",
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "_types_comment": "Typy do włączenia w kompilacji",
+    "types": [
+      "node"
+    ]
   },
   "_include_comment": "Katalogi i pliki do włączenia w kompilacji",
   "include": [
