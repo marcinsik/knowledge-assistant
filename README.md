@@ -60,13 +60,57 @@ docker compose -f docker-compose.prod.yml up --build
 - **Produkcyjna:** [http://localhost](http://localhost)
 - **API Backend:** [http://localhost:8000](http://localhost:8000)
 
-### Zarządzanie bazą danych
+## Synchronizacja danych między komputerami
+
+Dane bazy danych PostgreSQL są przechowywane w katalogu `database/pgdata`, który jest wersjonowany w repozytorium git. Dzięki temu możesz mieć te same dane na różnych komputerach.
+
+### Aby przesłać dane na inny komputer:
+
+1. Zatrzymaj wszystkie kontenery:
+   ```bash
+   docker compose down
+   ```
+
+2. Wypchnij zmiany do repozytorium git:
+   ```bash
+   git add database/pgdata
+   git commit -m "Aktualizacja bazy danych"
+   git push
+   ```
+
+3. Na drugim komputerze pobierz zmiany:
+   ```bash
+   git pull
+   ```
+
+4. Uruchom aplikację:
+   ```bash
+   docker compose up
+   ```
+
+> **Uwaga:** Może być konieczne nadanie odpowiednich uprawnień do katalogu `database/pgdata` na nowym komputerze.
+> ```bash
+> sudo chown -R 999:999 database/pgdata
+> ```
+> 999 to UID/GID użytkownika postgres w kontenerze.
+
+## Zarządzanie bazą danych
 
 Aplikacja automatycznie tworzy tabele w bazie danych przy pierwszym uruchomieniu. Aby zresetować dane:
 
 ```bash
-# Zatrzymaj i usuń wszystkie kontenery wraz z wolumenami
-docker compose down -v
+# Zatrzymaj kontenery
+docker compose down
+
+# Usuń katalog z danymi PostgreSQL
+sudo rm -rf database/pgdata
+
+# Utwórz pusty katalog
+mkdir -p database/pgdata
+sudo chown -R 999:999 database/pgdata
+
+# Uruchom ponownie aplikację
+docker compose up --build
 ```
 
 ## Konfiguracja
@@ -105,6 +149,8 @@ alembic upgrade head
 knowledge-assistant/
 ├── docker-compose.yml         # Konfiguracja Docker dla środowiska dev
 ├── docker-compose.prod.yml    # Konfiguracja Docker dla środowiska produkcyjnego
+├── database/                  # Katalog z danymi bazy danych
+│   └── pgdata/                # Dane PostgreSQL (synchronizowane między komputerami)
 ├── backend/                   # Kod backendu FastAPI
 │   ├── Dockerfile             # Obraz Docker dla backendu
 │   ├── requirements.txt       # Zależności Pythona

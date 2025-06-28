@@ -36,6 +36,12 @@ backend/uploaded_pdfs/*
 backend/app/uploaded_pdfs/*
 !backend/app/uploaded_pdfs/.gitkeep
 
+# Ignoruj tymczasowe pliki PostgreSQL, ale nie ignoruj samego katalogu
+database/pgdata/pg_stat_tmp/
+database/pgdata/postmaster.*
+database/pgdata/*.pid
+database/pgdata/*.lock
+
 # Inne
 .DS_Store
 .vscode/

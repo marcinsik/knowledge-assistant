@@ -8,8 +8,9 @@ services:
       POSTGRES_DB: knowledge_db
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
+      PGDATA: /var/lib/postgresql/data/pgdata  # Podkatalog dla danych
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - ./database/pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
@@ -62,5 +63,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  pg_data:
   backend_uploads:

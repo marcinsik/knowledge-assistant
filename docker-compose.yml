@@ -8,8 +8,9 @@ services:
       POSTGRES_DB: knowledge_db      # Nazwa bazy danych
       POSTGRES_USER: user           # Użytkownik bazy danych
       POSTGRES_PASSWORD: password   # Hasło do bazy danych
+      PGDATA: /var/lib/postgresql/data/pgdata  # Podkatalog dla danych
     volumes:
-      - pg_data:/var/lib/postgresql/data # Trwałe przechowywanie danych
+      - ./database/pgdata:/var/lib/postgresql/data # Przechowywanie danych w katalogu projektu
     ports:
       - "5432:5432"  # Mapowanie portu PostgreSQL
     healthcheck:
@@ -69,5 +70,4 @@ services:
 
 # Wolumeny dla trwałego przechowywania danych
 volumes:
-  pg_data:        # Wolumen dla danych PostgreSQL
   backend_uploads:  # Wolumen dla przesłanych plików PDF
