@@ -21,13 +21,9 @@ COPY . .
 RUN mkdir -p /app/app/uploaded_pdfs && \
     chmod -R 777 /app/app/uploaded_pdfs
 
-# Kopiowanie skryptu entrypoint
-COPY docker-entrypoint.sh /app/docker-entrypoint.sh
-RUN chmod +x /app/docker-entrypoint.sh
-
 # Wystawiamy port, na którym nasłuchuje FastAPI.
 EXPOSE 8000
-EXPOSE 8000
 
-# Komenda do uruchomienia aplikacji
-CMD ["/app/docker-entrypoint.sh"]
+# Inicjalizacja bazy danych i uruchomienie serwera
+CMD python -c "from app.main import create_db_and_tables; create_db_and_tables()" && \
+    uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
