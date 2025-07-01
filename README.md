@@ -55,9 +55,6 @@ docker compose -f docker-compose.prod.yml up --build
 - **Development:** [http://localhost:3000](http://localhost:3000)
 - **Production:** [http://localhost](http://localhost) (port 80)
 - **API Backend:** [http://localhost:8000](http://localhost:8000)
-- **Database:** localhost:5432 (PostgreSQL)
-- **Redis Cache:** localhost:6379
-
 
 
 ## Development (without Docker)
