@@ -1,230 +1,130 @@
 # Knowledge Assistant
 
-**Knowledge Assistant** to aplikacja webowa do przechowywania, wyszukiwania i zarządzania osobistą bazą wiedzy. Możesz dodawać notatki jako tekst lub przesyłać pliki PDF, oznaczać je tagami i szybko wyszukiwać w elementach bazy wiedzy.
+**Knowledge Assistant** is a web application for storing, searching, and managing your personal knowledge base. You can add notes as text or upload PDF files, tag them for easy organization, and quickly search through your knowledge items.
 
-## Funkcje
+## Features
 
-- Dodawanie, usuwanie elementów wiedzy (notatki lub PDF)
-- Oznaczanie notatek tagami dla łatwej organizacji
-- Wyszukiwanie pełnotekstowe i wyszukiwanie semantyczne
-- Filtrowanie według tagów
-- Responsywny, przyjazny dla użytkownika interfejs
-- Powiadomienia toast dla akcji i błędów
+- Add and delete knowledge items (notes or PDFs)
+- Tag notes for easy organization
+- Full-text and semantic search
+- Filter by tags
+- Responsive, user-friendly interface
+- Toast notifications for actions and errors
 
-## Technologia
+## Technology Stack
 
 - **Frontend:** React + TypeScript
-- **Backend:** FastAPI (Python) + Alembic (migracje bazy danych)
-- **Baza danych:** PostgreSQL z pgvector (wektory embeddingów)
-- **Wyszukiwanie:** Wyszukiwanie semantyczne z Sentence Transformers
-- **Ikony UI:** [Lucide React](https://lucide.dev/)
-- **Konteneryzacja:** Docker & Docker Compose
+- **Backend:** FastAPI (Python) + Alembic (database migrations)
+- **Database:** PostgreSQL with pgvector (embedding vectors)
+- **Cache:** Redis (sessions and temporary data)
+- **Search:** Semantic search with Sentence Transformers
+- **UI Icons:** [Lucide React](https://lucide.dev/)
+- **Containerization:** Docker & Docker Compose
 
-## Wymagania
+## Requirements
 
-- [Docker](https://www.docker.com/) i [Docker Compose](https://docs.docker.com/compose/) (v2 lub nowszy)
+- [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/) (v2 or newer)
 
-## Uruchomienie aplikacji
-
-### Pierwsze uruchomienie
+## Quick Start
 
 ```bash
-# Sklonuj repozytorium
+# Clone the repository
 git clone https://github.com/username/knowledge-assistant.git
 cd knowledge-assistant
 
-# Kopiuj przykładowy plik .env (opcjonalne)
-cp backend/.env.example backend/.env
-
-# Zbuduj i uruchom aplikację w trybie deweloperskim
+# Build and run the application
 docker compose up --build
 ```
 
-### Wersja deweloperska (z hot-reloadingiem)
+## Running the Application
+
+### Development version (with hot-reloading)
 
 ```bash
-# Zbuduj i uruchom wszystkie serwisy
 docker compose up
 ```
 
-### Wersja produkcyjna
+### Production version
 
 ```bash
-# Zbuduj i uruchom wersję produkcyjną
 docker compose -f docker-compose.prod.yml up --build
 ```
 
-### Dostęp do aplikacji
+### Application Access
 
-- **Deweloperska:** [http://localhost:3000](http://localhost:3000)
-- **Produkcyjna:** [http://localhost](http://localhost)
+- **Development:** [http://localhost:3000](http://localhost:3000)
+- **Production:** [http://localhost](http://localhost) (port 80)
 - **API Backend:** [http://localhost:8000](http://localhost:8000)
+- **Database:** localhost:5432 (PostgreSQL)
+- **Redis Cache:** localhost:6379
 
-## Synchronizacja danych między komputerami
+## Data Storage
 
-Dane bazy danych PostgreSQL są przechowywane w katalogu `database/pgdata`, który jest wersjonowany w repozytorium git. Dzięki temu możesz mieć te same dane na różnych komputerach.
+The application uses Docker volumes for data persistence:
+- **Database data:** Stored in `./database/pgdata/` directory
+- **Uploaded PDFs:** Stored in `backend_uploads` Docker volume
 
-### Aby przesłać dane na inny komputer:
-
-1. Zatrzymaj wszystkie kontenery:
-   ```bash
-   docker compose down
-   ```
-
-2. Wypchnij zmiany do repozytorium git:
-   ```bash
-   git add database/pgdata
-   git commit -m "Aktualizacja bazy danych"
-   git push
-   ```
-
-3. Na drugim komputerze pobierz zmiany:
-   ```bash
-   git pull
-   ```
-
-4. Uruchom aplikację:
-   ```bash
-   docker compose up
-   ```
-
-> **Uwaga:** Może być konieczne nadanie odpowiednich uprawnień do katalogu `database/pgdata` na nowym komputerze.
-> ```bash
-> sudo chown -R 999:999 database/pgdata
-> ```
-> 999 to UID/GID użytkownika postgres w kontenerze.
-
-## Zarządzanie bazą danych
-
-Aplikacja automatycznie tworzy tabele w bazie danych przy pierwszym uruchomieniu. Aby zresetować dane:
+To reset all data:
 
 ```bash
-# Zatrzymaj kontenery
+# Stop containers
 docker compose down
 
-# Usuń katalog z danymi PostgreSQL
+# Remove database data
 sudo rm -rf database/pgdata
 
-# Utwórz pusty katalog
-mkdir -p database/pgdata
-sudo chown -R 999:999 database/pgdata
+# Remove uploaded files volume
+docker volume rm knowledge-assistant_backend_uploads
 
-# Uruchom ponownie aplikację
+# Restart application (will recreate everything)
 docker compose up --build
 ```
 
-## Konfiguracja
-
-Wszystkie zmienne konfiguracyjne są ustawione w plikach `docker-compose.yml` i `docker-compose.prod.yml`.
-
-### Migracje bazy danych
-
-Migracje bazy danych są wykonywane automatycznie podczas uruchamiania kontenera backend.
-
-Aby ręcznie wykonać operacje na migracjach:
-
-```bash
-# Uruchom shell w kontenerze backend
-docker compose exec backend bash
-
-# Wewnątrz kontenera, przejdź do katalogu z alembic.ini
-cd /app/app
-
-# Sprawdź aktualną wersję migracji
-alembic current
-
-# Sprawdź historię migracji
-alembic history
-
-# Utwórz nową migrację
-alembic revision --autogenerate -m "opis_migracji"
-
-# Zastosuj migracje
-alembic upgrade head
-```
-
-## Struktura projektu
+## Project Structure
 
 ```
 knowledge-assistant/
-├── docker-compose.yml         # Konfiguracja Docker dla środowiska dev
-├── docker-compose.prod.yml    # Konfiguracja Docker dla środowiska produkcyjnego
-├── database/                  # Katalog z danymi bazy danych
-│   └── pgdata/                # Dane PostgreSQL (synchronizowane między komputerami)
-├── backend/                   # Kod backendu FastAPI
-│   ├── Dockerfile             # Obraz Docker dla backendu
-│   ├── requirements.txt       # Zależności Pythona
-│   ├── app/                   # Moduł aplikacji
-│   │   ├── alembic/           # Migracje bazy danych
-│   │   ├── uploaded_pdfs/     # Katalog na przesłane pliki PDF
-│   │   ├── main.py            # Główny plik aplikacji
-│   │   └── ...
-├── frontend/                  # Kod frontendu React
-│   ├── Dockerfile.dev         # Obraz Docker dla środowiska dev
-│   ├── Dockerfile.prod        # Obraz Docker dla środowiska produkcyjnego
-│   ├── nginx.conf             # Konfiguracja Nginx dla produkcji
-│   ├── package.json           # Zależności npm
-│   ├── src/                   # Kod źródłowy React
-│   └── ...
+├── docker-compose.yml         # Docker configuration for development
+├── docker-compose.prod.yml    # Docker configuration for production
+├── package.json               # Root package.json for shared dependencies
+├── database/                  # Database data directory
+│   └── pgdata/                # PostgreSQL data (persistent)
+├── backend/                   # FastAPI backend code
+│   ├── Dockerfile             # Docker image for backend
+│   ├── requirements.txt       # Python dependencies
+│   └── app/                   # Application module
+│       ├── alembic/           # Database migrations
+│       ├── uploaded_pdfs/     # Directory for uploaded PDF files
+│       ├── main.py            # Main application file
+│       └── users.py           # User management
+└── frontend/                  # React frontend code
+    ├── Dockerfile.dev         # Docker image for development
+    ├── Dockerfile.prod        # Docker image for production
+    ├── nginx.conf             # Nginx configuration for production
+    ├── package.json           # npm dependencies
+    └── src/                   # React source code
+        ├── components/        # React components
+        ├── hooks/             # Custom React hooks
+        ├── services/          # API services
+        └── utils/             # Utility functions
 ```
-
----
 
 ## Development (without Docker)
 
 ### Backend (FastAPI)
 
-1. **Zainstaluj zależności:**
-   ```bash
-   cd backend
-   pip install -r requirements.txt
-   ```
-
-2. **Uruchom serwer backend:**
-   ```bash
-   cd backend
-   uvicorn app.main:app --reload
-   ```
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
 
 ### Frontend (React)
 
-1. **Zainstaluj zależności:**
-   ```bash
-   cd frontend
-   npm install
-   ```
-
-2. **Uruchom serwer deweloperski:**
-   ```bash
-   cd frontend
-   npm start
-   ```
-
-## Struktura projektu
-
-```
-knowledge-assistant/
-├── backend/                # Kod backendu FastAPI
-│   ├── app/                # Moduł aplikacji
-│   │   ├── alembic/        # Migracje bazy danych
-│   │   ├── uploaded_pdfs/  # Katalog na przesłane PDF
-│   │   ├── main.py         # Główny plik aplikacji
-│   │   └── alembic.ini     # Konfiguracja migracji
-│   ├── Dockerfile          # Konfiguracja kontenera backend
-│   └── requirements.txt    # Zależności Pythona
-├── frontend/               # Kod frontendu React
-│   ├── src/                # Kod źródłowy React
-│   ├── DockerFile.dev      # Konfiguracja kontenera dev
-│   ├── Dockerfile.prod     # Konfiguracja kontenera prod
-│   └── nginx.conf          # Konfiguracja serwera Nginx
-├── docker-compose.yml      # Konfiguracja dev
-└── docker-compose.prod.yml # Konfiguracja produkcyjna
+```bash
+cd frontend
+npm install
+npm start
 ```
 
-- The backend API URL is set to `http://localhost:8000` by default in the frontend code.  
-  If you need to change it, edit the `API_BASE_URL` constant in `frontend/src/App.tsx`.
-
----
-
-
-**Enjoy
+The backend API URL is set via `REACT_APP_API_URL` environment variable and defaults to `http://localhost:8000`.
