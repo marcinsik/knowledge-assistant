@@ -1,4 +1,4 @@
-# Knowledge Assistant
+# Knowledge Assistant WORK IN PROGRESS
 
 **Knowledge Assistant** is a web application for storing, searching, and managing your personal knowledge base. You can add notes as text or upload PDF files, tag them for easy organization, and quickly search through your knowledge items.
 

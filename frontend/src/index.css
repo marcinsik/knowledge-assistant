@@ -250,17 +250,17 @@ body {
  
  /* Sidebar */
  .sidebar {
-   width: 280px;
+   position: fixed;
+   top: 0;
+   left: 0;
+   width: 100%;
+   height: auto;
+   z-index: var(--z-sidebar);
    background: rgba(255, 255, 255, 0.95);
    backdrop-filter: blur(20px);
    border-right: 1px solid var(--gray-200);
    box-shadow: var(--shadow-lg);
-   position: fixed;
-   top: 0;
-   left: 0;
-   height: 100vh;
-   z-index: var(--z-sidebar);
-   transform: translateX(-100%);
+   transform: translateY(0);
    transition: transform var(--transition-normal);
  }
  
@@ -328,28 +328,23 @@ body {
    display: flex;
    flex-direction: column;
    gap: var(--space-2);
+   padding: var(--space-4);
  }
  
  .sidebar__nav-item {
-   display: flex;
-   align-items: center;
-   gap: var(--space-3);
+   display: block;
    padding: var(--space-3) var(--space-4);
    border-radius: var(--radius-lg);
-   border: none;
    background: none;
    color: var(--gray-700);
    font-size: var(--font-size-sm);
    font-weight: 500;
    cursor: pointer;
    transition: all var(--transition-fast);
-   text-align: left;
-   width: 100%;
  }
  
  .sidebar__nav-item:hover {
    background: var(--gray-100);
-   transform: translateX(4px);
  }
  
  .sidebar__nav-item--active {
@@ -1098,7 +1093,7 @@ body {
   border-color: var(--primary-500);
   box-shadow: 
     0 0 0 3px var(--primary-100),
-    0 2px 4px rgba(14, 165, 233, 0.1);
+    0 2px 4px -1px rgba(14, 165, 233, 0.1);
   background: white;
 }
 
@@ -1210,6 +1205,44 @@ body {
     color: var(--primary-300);
   }
 }
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .app-layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    transform: translateX(0);
+  }
+
+  .header__search-input {
+    width: 100%;
+  }
+
+  .header__row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-4);
+  }
+
+  .app-main {
+    padding: var(--space-4);
+  }
+
+  .app-error__center {
+    max-width: 100%;
+    padding: var(--space-4);
+  }
+
+  .app-loading__center {
+    padding: var(--space-4);
+  }
+}
+
 /* Knowledge Item Detail */
 .item-details {
   background: #fff;
