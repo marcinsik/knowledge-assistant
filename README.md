@@ -58,56 +58,7 @@ docker compose -f docker-compose.prod.yml up --build
 - **Database:** localhost:5432 (PostgreSQL)
 - **Redis Cache:** localhost:6379
 
-## Data Storage
 
-The application uses Docker volumes for data persistence:
-- **Database data:** Stored in `./database/pgdata/` directory
-- **Uploaded PDFs:** Stored in `backend_uploads` Docker volume
-
-To reset all data:
-
-```bash
-# Stop containers
-docker compose down
-
-# Remove database data
-sudo rm -rf database/pgdata
-
-# Remove uploaded files volume
-docker volume rm knowledge-assistant_backend_uploads
-
-# Restart application (will recreate everything)
-docker compose up --build
-```
-
-## Project Structure
-
-```
-knowledge-assistant/
-├── docker-compose.yml         # Docker configuration for development
-├── docker-compose.prod.yml    # Docker configuration for production
-├── package.json               # Root package.json for shared dependencies
-├── database/                  # Database data directory
-│   └── pgdata/                # PostgreSQL data (persistent)
-├── backend/                   # FastAPI backend code
-│   ├── Dockerfile             # Docker image for backend
-│   ├── requirements.txt       # Python dependencies
-│   └── app/                   # Application module
-│       ├── alembic/           # Database migrations
-│       ├── uploaded_pdfs/     # Directory for uploaded PDF files
-│       ├── main.py            # Main application file
-│       └── users.py           # User management
-└── frontend/                  # React frontend code
-    ├── Dockerfile.dev         # Docker image for development
-    ├── Dockerfile.prod        # Docker image for production
-    ├── nginx.conf             # Nginx configuration for production
-    ├── package.json           # npm dependencies
-    └── src/                   # React source code
-        ├── components/        # React components
-        ├── hooks/             # Custom React hooks
-        ├── services/          # API services
-        └── utils/             # Utility functions
-```
 
 ## Development (without Docker)
 
