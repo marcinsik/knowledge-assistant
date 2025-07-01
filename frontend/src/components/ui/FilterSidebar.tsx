@@ -1,5 +1,6 @@
 import React from 'react';
 import { FilterState } from '../../utils/filterKnowledgeItems';
+import '../../styles/FilterSidebar.css';
 
 interface FilterSidebarProps {
   filters: FilterState;

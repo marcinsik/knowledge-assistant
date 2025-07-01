@@ -1,5 +1,6 @@
 import { CheckCircle, X, XCircle } from 'lucide-react';
 import React from 'react';
+import '../../styles/SimpleToast.css';
 
 export type ToastType = 'success' | 'error' | 'info';
 

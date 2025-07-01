@@ -1,5 +1,6 @@
-import { Menu, Moon, Search, Sun, User, X } from 'lucide-react';
+import { Menu, Moon, Search, Sun, X } from 'lucide-react';
 import React, { useRef } from 'react';
+import '../../styles/Header.css';
 
 interface HeaderProps {
   title: string;
@@ -28,7 +29,7 @@ const Header: React.FC<HeaderProps> = ({ title, searchQuery, onSearchChange, isD
             <input
               ref={inputRef}
               type="text"
-              placeholder="tereer"
+              placeholder="Szukaj"
               value={searchQuery}
               onChange={(e) => {
                 const newQuery = e.target.value;
@@ -45,9 +46,7 @@ const Header: React.FC<HeaderProps> = ({ title, searchQuery, onSearchChange, isD
         <button onClick={onThemeToggle} className="header__theme-btn">
           {isDarkMode ? <Sun className="header__theme-icon" /> : <Moon className="header__theme-icon" />}
         </button>
-        <div className="header__avatar">
-          <User className="header__avatar-icon" />
-        </div>
+
       </div>
     </div>
   </header>

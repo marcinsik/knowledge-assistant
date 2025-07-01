@@ -1,6 +1,7 @@
 import { Save, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { KnowledgeItem } from '../../services/api';
+import '../../styles/EditItemForm.css';
 
 interface EditItemFormProps {
   item: KnowledgeItem;

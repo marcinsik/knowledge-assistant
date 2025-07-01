@@ -1,0 +1,56 @@
+/* Error Message Component Styles */
+@import './variables.css';
+
+/* Error States */
+.app-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--primary-50) 0%, var(--secondary-50) 100%);
+}
+
+.app-error__center {
+  text-align: center;
+  padding: var(--space-8);
+  background: white;
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-xl);
+  max-width: 400px;
+  margin: var(--space-4);
+}
+
+.app-error__icon {
+  width: 4rem;
+  height: 4rem;
+  color: var(--accent-red);
+  margin: 0 auto var(--space-4);
+}
+
+.app-error__title {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: var(--space-2);
+}
+
+.app-error__desc {
+  color: var(--gray-600);
+  margin-bottom: var(--space-6);
+}
+
+.app-error__retry {
+  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+  color: white;
+  border: none;
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-lg);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.app-error__retry:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-colored);
+}

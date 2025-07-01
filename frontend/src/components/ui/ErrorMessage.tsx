@@ -1,6 +1,7 @@
 // Komponenty do wyświetlania komunikatów o błędach w aplikacji
 import { AlertCircle, X } from 'lucide-react';
 import React from 'react';
+import '../../styles/ErrorMessage.css';
 
 // Interfejs dla właściwości komponentu ErrorMessage
 interface ErrorMessageProps {

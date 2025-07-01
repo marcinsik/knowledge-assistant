@@ -1,7 +1,7 @@
 import { Calendar, Download, Edit, Trash2 } from 'lucide-react';
 import React from 'react';
 import { KnowledgeItem } from '../../services/api';
-import TagChip from './TagChip';
+import '../../styles/KnowledgeItemCard.css';
 
 interface KnowledgeItemCardProps {
   item: KnowledgeItem;
@@ -28,11 +28,6 @@ const KnowledgeItemCard: React.FC<KnowledgeItemCardProps> = ({ item, onEdit, onD
           </div>
         </div>
         <p className="item-card__content">{item.text_content.substring(0, 150)}...</p>
-        <div className="item-card__tags">
-          {item.tags.map((tag) => (
-            <TagChip key={tag} tag={tag} />
-          ))}
-        </div>
         <div className="item-card__meta">
           <span className="item-card__date">
             <Calendar className="item-card__date-icon" />

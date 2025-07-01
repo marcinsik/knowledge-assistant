@@ -1,5 +1,6 @@
 import { FileText, Plus, Settings, X } from 'lucide-react';
 import React from 'react';
+import '../../styles/Sidebar.css';
 
 interface SidebarProps {
   isOpen: boolean;

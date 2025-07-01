@@ -1,0 +1,185 @@
+/* App Layout Styles */
+@import './variables.css';
+
+/* App Root */
+.app-root {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--color-cream) 0%, var(--color-light-blue) 50%, var(--color-medium-blue) 100%);
+  transition: all var(--transition-normal);
+  color: var(--text-primary);
+}
+
+.app-root--dark {
+  background: linear-gradient(135deg, var(--dark-bg) 0%, var(--dark-surface) 100%);
+  color: var(--dark-text);
+}
+
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.item-list__add-btn {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, var(--color-light-blue) 0%, var(--color-medium-blue) 50%, var(--color-dark-blue) 100%);
+  border: 2px solid var(--color-dark-blue);
+  border-radius: 50%;
+  color: var(--text-primary);
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 
+    0 8px 32px rgba(137, 138, 196, 0.4),
+    0 4px 16px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+  transform: scale(1);
+}
+
+.item-list__add-btn:hover {
+  transform: scale(1.1) translateY(-2px);
+  background: linear-gradient(135deg, var(--color-medium-blue) 0%, var(--color-dark-blue) 50%, var(--primary-700) 100%);
+  box-shadow: 
+    0 12px 40px rgba(137, 138, 196, 0.6),
+    0 8px 24px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.item-list__add-btn:active {
+  transform: scale(1.05) translateY(0px);
+  box-shadow: 
+    0 6px 24px rgba(137, 138, 196, 0.4),
+    0 3px 12px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.item-list__add-btn::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(135deg, var(--color-light-blue), var(--color-dark-blue), var(--color-medium-blue));
+  border-radius: 50%;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.item-list__add-btn:hover::before {
+  opacity: 1;
+}
+
+
+/* Content Area */
+.app-content {
+  flex: 1;
+  padding: var(--space-6);
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  color: black;
+}
+
+/* Responsive */
+@media (max-width: 1400px) {
+  .app-content {
+    max-width: 1200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-content {
+    padding: var(--space-4);
+  }
+  
+  .item-list__add-btn {
+    width: 56px;
+    height: 56px;
+    bottom: 20px;
+    right: 20px;
+    font-size: 20px;
+  }
+  
+  .fab-primary {
+    width: 48px;
+    height: 48px;
+    bottom: 16px;
+    right: 16px;
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .item-list__add-btn {
+    width: 48px;
+    height: 48px;
+    bottom: 16px;
+    right: 16px;
+    font-size: 18px;
+  }
+}
+
+
+/* Animation keyframes */
+@keyframes pulse-glow {
+  0% {
+    box-shadow: 0 0 20px rgba(137, 138, 196, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(137, 138, 196, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(137, 138, 196, 0.4);
+  }
+}
+
+.add-btn-animated {
+  animation: pulse-glow 2s infinite;
+}
+
+/* Tooltip for add button */
+.add-btn-tooltip {
+  position: relative;
+}
+
+.add-btn-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  right: 50%;
+  transform: translateX(50%);
+  background: var(--text-primary);
+  color: var(--color-cream);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  margin-bottom: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.add-btn-tooltip:hover::after {
+  opacity: 1;
+  visibility: visible;
+}

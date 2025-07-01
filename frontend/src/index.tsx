@@ -2,7 +2,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App'; // Główny komponent aplikacji
-import './index.css'; // Globalne style CSS (Tailwind CSS)
+
 import reportWebVitals from './reportWebVitals'; // Narzędzie do mierzenia wydajności
 
 // Utworzenie root elementu React 18 dla renderowania aplikacji

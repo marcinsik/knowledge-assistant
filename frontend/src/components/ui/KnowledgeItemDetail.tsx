@@ -1,6 +1,7 @@
 import { ArrowLeft, Calendar, Download, Edit, FileText, Trash2 } from 'lucide-react';
 import React from 'react';
 import { KnowledgeItem } from '../../services/api';
+import '../../styles/KnowledgeItemDetail.css';
 
 interface KnowledgeItemDetailProps {
   item: KnowledgeItem;
@@ -9,7 +10,7 @@ interface KnowledgeItemDetailProps {
   onDelete: (id: number) => void;
 }
 
-const handleDownloadPdf = async (itemId, isNote = false) => {
+const handleDownloadPdf = async (itemId: number, isNote = false) => {
   try {
     const endpoint = isNote 
       ? `/api/knowledge_items/note_pdf/${itemId}`
@@ -76,12 +77,12 @@ const handleDownloadPdf = async (itemId, isNote = false) => {
     console.log('Download completed successfully'); // Debug
   } catch (error) {
     console.error('Błąd pobierania PDF:', error);
-    alert(`Wystąpił błąd podczas pobierania pliku PDF: ${error.message}`);
+    alert(`Wystąpił błąd podczas pobierania pliku PDF: ${(error as Error).message}`);
   }
 };
 
 // Test endpoint - dodaj ten przycisk do debugowania
-const testEndpoint = async (itemId, isNote = false) => {
+const testEndpoint = async (itemId: number, isNote = false) => {
   const endpoint = isNote 
     ? `/api/knowledge_items/note_pdf/${itemId}`
     : `/api/knowledge_items/pdf/${itemId}`;

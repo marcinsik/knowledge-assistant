@@ -1,5 +1,6 @@
 import { FileText, Upload, X } from 'lucide-react';
 import React, { useState } from 'react';
+import '../../styles/AddItemForm.css';
 
 interface AddItemFormProps {
   onSubmit: (data: { title: string; content?: string; file?: File; tags: string }) => Promise<void>;

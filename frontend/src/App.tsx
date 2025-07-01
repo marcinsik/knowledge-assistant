@@ -1,4 +1,4 @@
-import { AlertCircle, FileText, Plus } from 'lucide-react';
+import { AlertCircle, Plus } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import AddItemForm from './components/ui/AddItemForm';
 import EditItemForm from './components/ui/EditItemForm';
@@ -6,10 +6,11 @@ import FilterSidebar from './components/ui/FilterSidebar';
 import Header from './components/ui/Header';
 import KnowledgeItemCard from './components/ui/KnowledgeItemCard';
 import KnowledgeItemDetail from './components/ui/KnowledgeItemDetail';
-import { LoadingSpinner } from './components/ui/LoadingSpinner';
+
 import Sidebar from './components/ui/Sidebar';
 import SimpleToast, { ToastType } from './components/ui/SimpleToast';
 import { apiService, KnowledgeItem } from './services/api';
+import './styles/App.css';
 import { filterKnowledgeItems, FilterState } from './utils/filterKnowledgeItems';
 
 
@@ -41,6 +42,10 @@ const App: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
+      
+      // Sztuczne opóźnienie 3 sekundy dla demonstracji loading spinnera
+
+      
       const items = await apiService.getKnowledgeItems();
       setKnowledgeItems(items);
       setFilteredItems(items);
@@ -235,8 +240,7 @@ const App: React.FC = () => {
     return (
       <div className="app-loading">
         <div className="app-loading__center">
-          <LoadingSpinner size="lg" />
-          <p className="app-loading__text">Loading Knowledge Assistant...</p>
+          <p className="app-loading__text">Ładowanie aplikacji...</p>
         </div>
       </div>
     );
@@ -345,13 +349,12 @@ const App: React.FC = () => {
                       className="item-list__add-btn"
                     >
                       <Plus className="item-list__add-icon" />
-                      Dodaj nową
                     </button>
                   </div>
                   {filteredItems.length === 0 ? (
                     <div className="item-list__empty">
-                      <FileText className="item-list__empty-icon" />
-                      <h3 className="item-list__empty-title">Nie znaleziono elementów</h3>
+
+
                       <p className="item-list__empty-desc">
                         {searchQuery || filters.tags.length > 0 || filters.type !== 'all'
                           ? 'Spróbuj dostosować wyszukiwanie lub filtry'
@@ -363,7 +366,6 @@ const App: React.FC = () => {
                         className="item-list__add-btn"
                       >
                         <Plus className="item-list__add-icon" />
-                        Dodaj swoją pierwszą notatkę
                       </button>
                     </div>
                   ) : (

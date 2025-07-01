@@ -1,0 +1,274 @@
+/* Edit Item Form Component Styles */
+@import './variables.css';
+
+.edit-form {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.edit-form__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.edit-form__title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.edit-form__close {
+  background: none;
+  border: none;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.edit-form__close:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.edit-form__close-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.edit-form__form {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.edit-form__content {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.edit-form__field {
+  margin-bottom: 20px;
+}
+
+.edit-form__label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.edit-form__input,
+.edit-form__textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.edit-form__input:focus,
+.edit-form__textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.edit-form__textarea {
+  resize: vertical;
+  min-height: 120px;
+  font-family: inherit;
+}
+
+.edit-form__help {
+  display: block;
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.edit-form__error {
+  color: #dc2626;
+  text-align: center;
+  padding: 20px;
+  font-size: 1rem;
+}
+
+.edit-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.edit-form__cancel {
+  padding: 10px 20px;
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #374151;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.edit-form__cancel:hover:not(:disabled) {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.edit-form__submit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.edit-form__submit:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.edit-form__submit:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.edit-form__save-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.edit-form__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Dark mode support */
+.dark .edit-form {
+  background: #1f2937;
+  color: #f9fafb;
+}
+
+.dark .edit-form__header,
+.dark .edit-form__actions {
+  background: #111827;
+  border-color: #374151;
+}
+
+.dark .edit-form__title {
+  color: #f9fafb;
+}
+
+.dark .edit-form__close {
+  color: #9ca3af;
+}
+
+.dark .edit-form__close:hover {
+  background: #374151;
+  color: #d1d5db;
+}
+
+.dark .edit-form__label {
+  color: #d1d5db;
+}
+
+.dark .edit-form__input,
+.dark .edit-form__textarea {
+  background: #111827;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+.dark .edit-form__input:focus,
+.dark .edit-form__textarea:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.dark .edit-form__help {
+  color: #9ca3af;
+}
+
+.dark .edit-form__cancel {
+  background: #374151;
+  border-color: #4b5563;
+  color: #d1d5db;
+}
+
+.dark .edit-form__cancel:hover:not(:disabled) {
+  background: #4b5563;
+  border-color: #6b7280;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .edit-form {
+    width: 95vw;
+    margin: var(--space-4) auto;
+  }
+}
+
+@media (max-width: 576px) {
+  .edit-form__header, 
+  .edit-form__content, 
+  .edit-form__actions {
+    padding: var(--space-3);
+  }
+
+  .edit-form__actions {
+    flex-direction: column-reverse;
+    gap: var(--space-2);
+  }
+
+  .edit-form__submit,
+  .edit-form__cancel {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .edit-form {
+    max-height: 90vh;
+  }
+
+  .edit-form__content {
+    max-height: 50vh;
+  }
+}
