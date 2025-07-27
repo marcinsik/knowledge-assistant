@@ -64,7 +64,7 @@ docker compose -f docker-compose.prod.yml up --build
 ```bash
 cd backend
 pip install -r requirements.txt
-uvicorn app.main:app --reload
+run server
 ```
 
 ### Frontend (React)
